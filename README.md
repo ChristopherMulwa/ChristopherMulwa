@@ -53,7 +53,7 @@ Software Engineer and Security Practitioner based in Nairobi, Kenya. I build ful
 
 - [ChallengeMe](https://challengeme.africa) — Golf challenge platform. Live deployment.
 - TeeupTime — Tee-time booking platform for golf clubs. In development.
-- [Swing](https://github.com/ChristopherMulwa/Swing) — MVP. <!-- TODO: confirm repo URL + one-line description -->
+- Swing — <!-- TODO: one-line description -->
 
 ## GitHub stats
 
