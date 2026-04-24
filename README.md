@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=22&duration=3000&pause=1000&color=22C55E&center=true&vCenter=true&width=600&lines=Software+Engineer;Security+Practitioner;Full-stack+%7C+Mobile+%7C+AppSec;Building+from+Nairobi+%F0%9F%87%B0%F0%9F%87%AA" alt="Software Engineer · Security Practitioner · Full-stack | Mobile | AppSec · Building from Nairobi" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=22&duration=5000&pause=2000&color=22C55E&center=true&vCenter=true&width=600&lines=Software+Engineer;Security+Practitioner;Full-stack+%7C+Mobile+%7C+AppSec;Web+AppSec+%7C+Pentesting+%28training%29;Building+from+Nairobi+%F0%9F%87%B0%F0%9F%87%AA" alt="Software Engineer · Security Practitioner · Full-stack | Mobile | AppSec · Web AppSec | Pentesting (training) · Building from Nairobi" />
 </p>
 
 <p align="center">
@@ -13,7 +13,8 @@
 Software Engineer and Security Practitioner based in Nairobi, Kenya. I build full-stack applications with a security-first mindset.
 
 - Focus: Full-stack development, Application Security
-- Learning: Offensive security (TryHackMe, HackerOne), React Native / Expo
+- Offensive security training: TryHackMe, HackerOne
+- Also learning: React Native / Expo
 - Education: BSc, Information Security & Forensics
 
 ## Tech stack
