@@ -8,11 +8,6 @@
   </a>
 </p>
 
-```console
-~$ whoami
-→ software engineer · appsec · nairobi
-```
-
 ## About
 
 Software Engineer and Security Practitioner based in Nairobi, Kenya. I build full-stack applications with a security-first mindset.
@@ -56,15 +51,14 @@ Software Engineer and Security Practitioner based in Nairobi, Kenya. I build ful
 
 ## Featured projects
 
-**ChallengeMe** — Golf challenge platform. Live deployment.
-<!-- TODO: add live URL once confirmed -->
-
-**TeeupTime** — Tee-time booking platform for golf clubs. In development.
+- [ChallengeMe](https://challengeme.africa) — Golf challenge platform. Live deployment.
+- TeeupTime — Tee-time booking platform for golf clubs. In development.
+- [Swing](https://github.com/ChristopherMulwa/Swing) — MVP. <!-- TODO: confirm repo URL + one-line description -->
 
 ## GitHub stats
 
 <p>
-  <img src="https://github-readme-stats.vercel.app/api?username=ChristopherMulwa&show_icons=true&theme=github_dark&title_color=22C55E&icon_color=22C55E&text_color=C9D1D9&bg_color=0D1117&hide_border=true&include_all_commits=true&count_private=true" alt="GitHub stats" />
+  <img src="https://github-readme-stats.vercel.app/api?username=ChristopherMulwa&show_icons=true&theme=github_dark&title_color=22C55E&text_color=C9D1D9&bg_color=0D1117&hide_border=true&include_all_commits=true&count_private=true" alt="GitHub stats" />
 </p>
 
 <p>
