@@ -8,7 +8,7 @@
   </a>
 </p>
 
-### About
+## About
 
 Software Engineer and Security Practitioner based in Nairobi, Kenya. I build full-stack applications with a security-first mindset.
 
@@ -17,7 +17,7 @@ Software Engineer and Security Practitioner based in Nairobi, Kenya. I build ful
 - Also learning: React Native / Expo
 - Education: BSc, Information Security & Forensics
 
-### Tech stack
+## Tech stack
 
 **Languages**
 
@@ -58,13 +58,13 @@ Software Engineer and Security Practitioner based in Nairobi, Kenya. I build ful
 ![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
 ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
 
-### Featured projects
+## Featured projects
 
 - [ChallengeMe](https://challengeme.africa) — Golf challenge platform. Live deployment.
 - TeeupTime — Tee-time booking platform for golf clubs. In development.
 - Swing — Golf coaching management platform for coaches and their students. In development.
 
-### GitHub stats
+## GitHub stats
 
 <p>
   <img src="https://github-readme-stats.vercel.app/api?username=ChristopherMulwa&show_icons=true&theme=github_dark&title_color=22C55E&text_color=C9D1D9&bg_color=0D1117&hide_border=true&include_all_commits=true&count_private=true" alt="GitHub stats" />
