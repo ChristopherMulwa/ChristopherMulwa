@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 
 from . import readme as readme_builder
-from .cards import hero, pill, pipeline, stack, telemetry
+from .cards import hero, pill, stack, telemetry
 from .config import ConfigError, load
 from .design import PALETTES
 from .sanitize import slug
@@ -145,9 +145,10 @@ def main(argv: list[str] | None = None) -> int:
         rendered[f"stack-{p.name}"] = stack.render(
             p, groups=cfg.stack, note=f"{sum(len(g.items) for g in cfg.stack)} tools tracked"
         )
-        rendered[f"pipeline-{p.name}"] = pipeline.render(
-            p, subtitle="stdlib python · zero runtime dependencies"
-        )
+        # The pipeline card is not rendered: the README section that carried it
+        # was removed. `generator.cards.pipeline` is kept intact -- restore the
+        # three lines here and the _picture() call in readme.py to bring it back.
+        # Nothing unreferenced is written, so `assets/` has no orphans.
 
     seen: set[str] = set()
     for link in cfg.links:

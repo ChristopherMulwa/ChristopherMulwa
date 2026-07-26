@@ -183,56 +183,17 @@ def build(cfg, snap, versions: dict[str, str], pill_slugs: list[tuple[str, objec
         out.append(f"**{md_text(practice.label, 120)}** — {md_text(practice.detail, 400)}")
         out.append("")
 
-    # ---- the pipeline ---------------------------------------------------
-    out.append("## How this page builds itself")
-    out.append("")
-    out.append(
-        "This README is not hand-written. A scheduled workflow queries the GitHub "
-        "API, renders every image in this repository, and commits the result only "
-        "if the bytes changed."
-    )
-    out.append("")
-    out.append(
-        _picture("pipeline", "Build pipeline and the security controls at each stage", versions)
-    )
-    out.append("")
-    out.append(
-        "A profile README is a program with write access to a repository, so it is "
-        "worth treating like one:"
-    )
-    out.append("")
-    out.append(
-        "- **No untrusted trigger.** The workflow runs on `schedule`, on manual "
-        "dispatch, and on pushes to `main`. It never runs on `pull_request_target` "
-        "or `issue_comment`, the two triggers behind most Actions token-theft "
-        "incidents."
-    )
-    out.append(
-        "- **No third-party runtime dependencies.** The generator is standard "
-        "library Python. There is no `pip install` step in CI, so there is no "
-        "package to typosquat or compromise."
-    )
-    out.append(
-        "- **Least privilege.** Default permissions are empty; the single job that "
-        "publishes is granted `contents: write` and nothing else. No personal "
-        "access token is stored."
-    )
-    out.append(
-        "- **Everything escaped at the boundary.** Repository names and "
-        "descriptions come back from the API as untrusted strings and are encoded "
-        "for their sink — Markdown or XML — before they reach it."
-    )
-    out.append(
-        "- **Bounded egress.** Exactly one host is reachable, redirects are "
-        "refused, and responses are capped and timed out."
-    )
-    out.append("")
-    out.append(
-        "The full write-up, including the residual risks I chose to accept and why, "
-        "is in [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md). The workflow itself is "
-        "[here](.github/workflows/build-profile.yml)."
-    )
-    out.append("")
+    # ---- no self-description --------------------------------------------
+    # There was a "How this page builds itself" section here: the pipeline
+    # diagram, five prose bullets restating it, and a link to the threat model.
+    # Removed deliberately. It was the largest block of prose on the page --
+    # more words than all four shipped products combined -- and it described
+    # the build system rather than the work. The repository documents itself
+    # for anyone who looks; the page does not need to argue the case.
+    #
+    # The footer still records that the document is generated and when. To
+    # reinstate the card, render `pipeline` in __main__.py and place it here
+    # with _picture(); generator/cards/pipeline.py is untouched.
 
     # ---- footer ---------------------------------------------------------
     out.append("---")

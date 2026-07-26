@@ -119,26 +119,6 @@ An implementation of the WHS handicap index rules — score differentials, the b
 
 **Training that feeds back into building** — Structured offensive practice on TryHackMe and HackerOne. The point is not the badge count — it is that every class of bug I learn to exploit becomes a class of bug I stop shipping.
 
-## How this page builds itself
-
-This README is not hand-written. A scheduled workflow queries the GitHub API, renders every image in this repository, and commits the result only if the bytes changed.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/pipeline-dark.svg?v=21a41eff9e">
-  <source media="(prefers-color-scheme: light)" srcset="assets/pipeline-light.svg?v=cf66962212">
-  <img alt="Build pipeline and the security controls at each stage" src="assets/pipeline-dark.svg?v=21a41eff9e" width="100%">
-</picture>
-
-A profile README is a program with write access to a repository, so it is worth treating like one:
-
-- **No untrusted trigger.** The workflow runs on `schedule`, on manual dispatch, and on pushes to `main`. It never runs on `pull_request_target` or `issue_comment`, the two triggers behind most Actions token-theft incidents.
-- **No third-party runtime dependencies.** The generator is standard library Python. There is no `pip install` step in CI, so there is no package to typosquat or compromise.
-- **Least privilege.** Default permissions are empty; the single job that publishes is granted `contents: write` and nothing else. No personal access token is stored.
-- **Everything escaped at the boundary.** Repository names and descriptions come back from the API as untrusted strings and are encoded for their sink — Markdown or XML — before they reach it.
-- **Bounded egress.** Exactly one host is reachable, redirects are refused, and responses are capped and timed out.
-
-The full write-up, including the residual risks I chose to accept and why, is in [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md). The workflow itself is [here](.github/workflows/build-profile.yml).
-
 ---
 
 <sub>Generated 2026-07-26 15:10 UTC · live snapshot · no third-party trackers, badge services, or analytics on this page.</sub>

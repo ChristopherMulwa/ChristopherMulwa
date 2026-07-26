@@ -194,13 +194,13 @@ class Rendering(unittest.TestCase):
     def test_both_themes_are_emitted(self):
         entry.main(["--root", str(self.tmp), "--offline"])
         names = {p.name for p in (self.tmp / "assets").glob("*.svg")}
-        for base in ("hero", "telemetry", "stack", "pipeline"):
+        for base in ("hero", "telemetry", "stack"):
             self.assertIn(f"{base}-dark.svg", names)
             self.assertIn(f"{base}-light.svg", names)
 
     def test_themes_actually_differ(self):
         entry.main(["--root", str(self.tmp), "--offline"])
-        for base in ("hero", "telemetry", "stack", "pipeline"):
+        for base in ("hero", "telemetry", "stack"):
             dark = (self.tmp / "assets" / f"{base}-dark.svg").read_text("utf-8")
             light = (self.tmp / "assets" / f"{base}-light.svg").read_text("utf-8")
             self.assertNotEqual(dark, light, base)
