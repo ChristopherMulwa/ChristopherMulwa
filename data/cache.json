@@ -57,27 +57,31 @@
   "activity_total": 18,
   "followers": 0,
   "following": 0,
-  "generated_at": "2026-07-26T14:51:08Z",
+  "generated_at": "2026-07-26T15:10:07Z",
   "languages": [
     {
       "name": "TypeScript",
-      "share": 0.8784
+      "share": 0.7558
+    },
+    {
+      "name": "Python",
+      "share": 0.1395
     },
     {
       "name": "C",
-      "share": 0.1216
+      "share": 0.1047
     }
   ],
-  "last_push": "2026-04-24",
+  "last_push": "2026-07-26",
   "live": true,
   "own_repos": 5,
   "public_repos": 6,
   "top_repos": [
     {
       "description": "",
-      "language": "",
+      "language": "Python",
       "name": "ChristopherMulwa",
-      "pushed": "2026-04-24",
+      "pushed": "2026-07-26",
       "stars": 0,
       "url": "https://github.com/ChristopherMulwa/ChristopherMulwa"
     },

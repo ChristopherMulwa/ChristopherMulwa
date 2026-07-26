@@ -12,9 +12,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=7b72c57459">
-  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=ba027f4d25">
-  <img alt="Christopher Mulwa — I build products, then try to break them." src="assets/hero-dark.svg?v=7b72c57459" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=c3af9fa6af">
+  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=bd2444c8b6">
+  <img alt="Christopher Mulwa — I build products, then try to break them." src="assets/hero-dark.svg?v=c3af9fa6af" width="100%">
 </picture>
 
 &nbsp;
@@ -35,9 +35,9 @@ Software engineer in Nairobi working across the full stack, with a second discip
 ## Telemetry
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/telemetry-dark.svg?v=6ac6658c81">
-  <source media="(prefers-color-scheme: light)" srcset="assets/telemetry-light.svg?v=e4f7173437">
-  <img alt="GitHub telemetry: repositories, stars, commit activity and language mix" src="assets/telemetry-dark.svg?v=6ac6658c81" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/telemetry-dark.svg?v=8386da2e70">
+  <source media="(prefers-color-scheme: light)" srcset="assets/telemetry-light.svg?v=37c7eb596c">
+  <img alt="GitHub telemetry: repositories, stars, commit activity and language mix" src="assets/telemetry-dark.svg?v=8386da2e70" width="100%">
 </picture>
 
 <details>
@@ -50,13 +50,14 @@ Software engineer in Nairobi working across the full stack, with a second discip
 | Commits, trailing 52 weeks | 18 |
 | Followers | 0 |
 | Years on GitHub | 2\.5 |
-| Last public push | 2026-04-24 |
-| Snapshot | 2026-07-26 14:51 UTC (live) |
+| Last public push | 2026-07-26 |
+| Snapshot | 2026-07-26 15:10 UTC (live) |
 
 | Language | Share |
 | --- | --- |
-| TypeScript | 88% |
-| C | 12% |
+| TypeScript | 76% |
+| Python | 14% |
+| C | 10% |
 
 </details>
 
@@ -140,4 +141,4 @@ The full write-up, including the residual risks I chose to accept and why, is in
 
 ---
 
-<sub>Generated 2026-07-26 14:51 UTC · live snapshot · no third-party trackers, badge services, or analytics on this page.</sub>
+<sub>Generated 2026-07-26 15:10 UTC · live snapshot · no third-party trackers, badge services, or analytics on this page.</sub>
