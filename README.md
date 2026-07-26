@@ -12,9 +12,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=e936a91749">
-  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=b1b180e81a">
-  <img alt="Christopher Mulwa — I build products, then try to break them." src="assets/hero-dark.svg?v=e936a91749" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=c49649ac90">
+  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=57e69c3c3c">
+  <img alt="Christopher Mulwa — I build products, then try to break them." src="assets/hero-dark.svg?v=c49649ac90" width="100%">
 </picture>
 
 &nbsp;

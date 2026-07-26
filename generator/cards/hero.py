@@ -15,7 +15,10 @@ on top of that. `.role:first-of-type` carries the static fallback.
 
 from __future__ import annotations
 
+import calendar
+import hashlib
 import math
+import time
 
 from ..design import (
     MONO,
@@ -29,15 +32,57 @@ from ..design import (
     rect,
     text,
 )
-from ..sanitize import human_count
+from ..sanitize import clamp, human_count
 
 W, H = 920, 250
 PAD = 34
 ROLE_SECONDS = 3.4
 
+# Radar placement. Kept as constants because the clearance above the ring is
+# load-bearing: the build stamp sits on the baseline at y=38, so anything that
+# lifts the ring above y≈46 puts it back through the text.
+RADAR_CX = W - 148
+RADAR_CY = 145
+RADAR_R = 96
 
-def _radar(cx: float, cy: float, r: float, p: Palette) -> str:
-    """Concentric rings, plotted contacts, and a rotating sweep."""
+
+def contacts(plots: tuple[tuple[str, str], ...], now_epoch: float,
+             p: Palette) -> tuple[tuple[float, float, str, str], ...]:
+    """Turn repositories into radar contacts: (degrees, distance, colour, name).
+
+    The blips used to be five hardcoded ``(angle, distance, colour)`` tuples.
+    They looked like readings and meant nothing, which is the one thing this
+    page should not do. They are now derived from the snapshot:
+
+    * **Bearing** is a stable hash of the repository name, so a repository
+      keeps the same position on the dial from one build to the next and the
+      dial does not reshuffle itself every night.
+    * **Range** is how long ago it was last pushed -- recent work sits near
+      the centre, dormant work drifts out to the rim.
+
+    Both are pure functions of ``data/cache.json``, so the render stays
+    byte-reproducible and ``--check`` still means something. Colour is
+    rotation only; it is not asked to carry meaning.
+    """
+    wheel = (p.accent, p.cyan, p.violet, p.amber, p.rose)
+    out = []
+    for i, (name, pushed) in enumerate(plots):
+        digest = hashlib.sha256(name.encode("utf-8")).digest()
+        degrees = ((digest[0] << 8) | digest[1]) % 360
+        age_days = 365.0
+        try:
+            pushed_at = calendar.timegm(time.strptime(str(pushed)[:10], "%Y-%m-%d"))
+            age_days = clamp((now_epoch - pushed_at) / 86400.0, 0.0, 365.0)
+        except (ValueError, TypeError):
+            pass  # unparseable date -> plotted at the rim, which is honest
+        out.append((float(degrees), 0.30 + 0.62 * (age_days / 365.0),
+                    wheel[i % len(wheel)], name))
+    return tuple(out)
+
+
+def _radar(cx: float, cy: float, r: float, p: Palette,
+           blips: tuple[tuple[float, float, str, str], ...] = ()) -> str:
+    """Concentric rings, plotted repositories, and a rotating sweep."""
     out = [
         # Rings
         *[
@@ -50,21 +95,21 @@ def _radar(cx: float, cy: float, r: float, p: Palette) -> str:
         line(cx, cy - r, cx, cy + r, stroke=p.border, opacity=0.5),
     ]
 
-    # Deterministic "contacts". Fixed angles keep the render reproducible --
-    # a build that produces different bytes each run cannot be verified.
-    contacts = ((28, 0.82, p.accent), (104, 0.55, p.cyan), (196, 0.90, p.violet),
-                (263, 0.38, p.accent), (322, 0.68, p.amber))
-    for i, (deg, dist, color) in enumerate(contacts):
+    for i, (deg, dist, color, name) in enumerate(blips):
         rad = math.radians(deg)
         x = cx + math.cos(rad) * r * dist
         y = cy + math.sin(rad) * r * dist
         out.append(
             f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" fill="{color}" '
-            f'class="ping" style="animation-delay:{i * 0.9:.1f}s"/>'
+            f'class="ping" style="animation-delay:{i * 0.9:.1f}s"><title>{name}</title></circle>'
         )
+        # The halo is drawn wider than the dot it surrounds. At r=3 it sat
+        # exactly on the dot, so wherever the expand animation does not run
+        # the pair rendered as one thick blob rather than a contact.
         out.append(
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" fill="none" stroke="{color}" '
-            f'stroke-width="1" class="ping-ring" style="animation-delay:{i * 0.9:.1f}s"/>'
+            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" fill="none" stroke="{color}" '
+            f'stroke-width="1" opacity="0.55" class="ping-ring" '
+            f'style="animation-delay:{i * 0.9:.1f}s"/>'
         )
 
     # Sweep: a wedge that rotates about the centre.
@@ -93,6 +138,8 @@ def render(
     followers: int,
     built: str,
     live: bool,
+    plots: tuple[tuple[str, str], ...] = (),
+    now_epoch: float = 0.0,
 ) -> str:
     roles = roles or ("Engineer",)
     cycle = len(roles) * ROLE_SECONDS
@@ -143,10 +190,16 @@ def render(
 .role:first-of-type{{opacity:1}}}}
 """
 
+    # Radius and centre are chosen so the outer ring clears the build stamp
+    # above it. At r=104 centred on y=131 the ring cut through the timestamp
+    # for ~100px of its width, overlapping the glyphs by up to 13px.
+    #   ring top    = RADAR_CY - RADAR_R = 49   (stamp ends at y=40)
+    #   ring bottom = RADAR_CY + RADAR_R = 241  (card is 250 tall)
+    blips = contacts(plots, now_epoch, p)
     body = [
         rect(0, 0, W, H, fill=p.canvas),
         backdrop,
-        _radar(W - 148, H / 2 + 6, 104, p),
+        _radar(RADAR_CX, RADAR_CY, RADAR_R, p, blips),
         rect(0, 0, W, H, fill=f"url(#fade-{p.name})"),
     ]
 
@@ -219,7 +272,14 @@ def render(
         desc=(
             f"Banner for {display_name}. {', '.join(roles)}. Based in {location}. "
             f"{repos} public repositories, {stars} stars, {followers} followers. "
-            f"Generated {built}."
+            + (
+                f"The dial plots {len(blips)} public "
+                f"{'repository' if len(blips) == 1 else 'repositories'} by how "
+                "recently each was pushed: recent work near the centre, dormant "
+                f"work toward the rim ({', '.join(b[3] for b in blips)}). "
+                if blips else ""
+            )
+            + f"Generated {built}."
         ),
         defs=defs,
         style=style,

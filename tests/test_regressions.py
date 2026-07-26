@@ -324,6 +324,61 @@ class ContentDoesNotDependOnAnimation(unittest.TestCase):
                     )
 
 
+class RadarPlotsRealData(unittest.TestCase):
+    """The radar showed five invented contacts and overlapped the build stamp.
+
+    The blips were hardcoded ``(angle, distance, colour)`` tuples: they looked
+    like readings and encoded nothing. And at r=104 centred on y=131 the outer
+    ring cut through the timestamp above it for ~100px, overlapping the glyphs
+    by up to 13px.
+    """
+
+    def test_outer_ring_clears_the_build_stamp(self):
+        from generator.cards.hero import PAD, RADAR_CY, RADAR_R
+
+        stamp_baseline = PAD + 4          # where the build stamp is drawn
+        stamp_bottom = stamp_baseline + 9.5 * 0.2
+        self.assertGreater(
+            RADAR_CY - RADAR_R, stamp_bottom + 5,
+            "the radar's outer ring is back inside the build stamp",
+        )
+
+    def test_radar_fits_inside_the_card(self):
+        from generator.cards.hero import H, W, RADAR_CX, RADAR_CY, RADAR_R
+
+        self.assertGreaterEqual(RADAR_CY + RADAR_R, 0)
+        self.assertLessEqual(RADAR_CY + RADAR_R, H - 4, "ring clipped at the bottom")
+        self.assertLessEqual(RADAR_CX + RADAR_R, W, "ring clipped at the right")
+
+    def test_blips_come_from_the_snapshot_not_from_constants(self):
+        """Different repositories must produce a different dial."""
+        from generator.cards.hero import contacts
+        from generator.design import PALETTES
+
+        p = PALETTES[0]
+        a = contacts((("alpha", "2026-01-01"), ("beta", "2025-01-01")), 1767225600.0, p)
+        b = contacts((("gamma", "2026-01-01"), ("delta", "2025-01-01")), 1767225600.0, p)
+        self.assertEqual(len(a), 2)
+        self.assertNotEqual([x[0] for x in a], [x[0] for x in b], "bearing ignores the name")
+        # A repository keeps its bearing between builds.
+        self.assertEqual(a[0][0], contacts((("alpha", "2020-05-05"),), 1767225600.0, p)[0][0])
+        # Recent work plots nearer the centre than dormant work.
+        self.assertLess(a[0][1], a[1][1])
+
+    def test_no_blips_when_the_snapshot_has_no_repositories(self):
+        from generator.cards.hero import contacts
+        from generator.design import PALETTES
+
+        self.assertEqual(contacts((), 0.0, PALETTES[0]), ())
+
+    def test_the_dial_is_explained_in_the_description(self):
+        """A plot that means something has to say so, or it is still decoration."""
+        for name in ("hero-dark", "hero-light"):
+            svg = (ROOT / "assets" / f"{name}.svg").read_text("utf-8")
+            desc = re.search(r"<desc[^>]*>(.*?)</desc>", svg, re.S).group(1)
+            self.assertIn("how recently", desc, f"{name}: dial not explained")
+
+
 class LiveRenderIsReproducible(unittest.TestCase):
     """A live build's output must survive the reproducibility gate.
 

@@ -138,6 +138,14 @@ def main(argv: list[str] | None = None) -> int:
             followers=snap.followers,
             built=built,
             live=snap.live,
+            # The radar plots real repositories rather than invented points.
+            # Values come from the snapshot, so the render stays reproducible.
+            plots=tuple(
+                (str(r.get("name") or ""), str(r.get("pushed") or ""))
+                for r in snap.top_repos
+                if isinstance(r, dict) and r.get("name")
+            ),
+            now_epoch=now_epoch,
         )
         rendered[f"telemetry-{p.name}"] = telemetry.render(
             p, snap=snap, built=built, now_epoch=now_epoch
