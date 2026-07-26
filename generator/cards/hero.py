@@ -2,8 +2,15 @@
 
 A masthead that reads as an instrument panel rather than a badge collection:
 identity on the left, a rotating role ticker, and on the right a radar sweep
-standing in for attack-surface monitoring. The sweep is CSS-animated inside
-the SVG, which browsers honour for images embedded via ``<img>``.
+standing in for attack-surface monitoring. Both are CSS-animated inside the
+SVG.
+
+Do not rely on that animation to display anything. Measured on the published
+profile page: GitHub embeds this file with ``<img>``, and the animation does
+not run there -- the roles stayed blank and the sweep static across a full
+cycle, while the same file opened as a document animates correctly. So every
+element must be legible in its unanimated state, and animation is decoration
+on top of that. `.role:first-of-type` carries the static fallback.
 """
 
 from __future__ import annotations
@@ -109,6 +116,14 @@ def render(
 
     style = f"""
 .role{{opacity:0;animation:roll {cycle:g}s linear infinite}}
+/* The ticker must never be the only way to read a role. Where the animation
+   does not run, every .role stays at opacity 0 and the line renders blank --
+   which is what happens on the profile page itself, because GitHub embeds
+   this file with <img> and the animation does not start there. Keeping the
+   first role visible by default costs nothing where the animation does run:
+   an infinite animation is always in its active phase, so the animated value
+   wins and role one still takes its turn in the cycle. */
+.role:first-of-type{{opacity:1}}
 @keyframes roll{{
 0%{{opacity:0;transform:translateY(5px)}}
 {window * 0.09:.2f}%{{opacity:1;transform:translateY(0)}}

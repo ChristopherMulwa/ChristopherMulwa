@@ -1,5 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="920" height="250" viewBox="0 0 920 250" role="img" aria-labelledby="t d" font-family="ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'DejaVu Sans Mono','Liberation Mono',monospace"><title id="t">Christopher Mulwa — I build products, then try to break them.</title><desc id="d">Banner for Christopher Mulwa. Software Engineer · full-stack, mobile, Security Practitioner · web application security, Building golf technology for the African market, BSc Information Security &amp; Forensics. Based in Nairobi, Kenya. 5 public repositories, 0 stars, 0 followers. Generated 2026-07-26 15:10 UTC.</desc><defs><pattern id="grid-light" width="23" height="23" patternUnits="userSpaceOnUse"><path d="M 23 0 L 0 0 0 23" fill="none" stroke="#E7ECF2" stroke-width="1"/></pattern><linearGradient id="fade-light" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="0.62" stop-color="#FFFFFF" stop-opacity="0.55"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient><linearGradient id="sweep-light" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#15803D" stop-opacity="0.34"/><stop offset="1" stop-color="#15803D" stop-opacity="0"/></linearGradient><linearGradient id="rule-light" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#15803D"/><stop offset="1" stop-color="#15803D" stop-opacity="0"/></linearGradient></defs><style>/*<![CDATA[*/
 .role{opacity:0;animation:roll 13.6s linear infinite}
+/* The ticker must never be the only way to read a role. Where the animation
+   does not run, every .role stays at opacity 0 and the line renders blank --
+   which is what happens on the profile page itself, because GitHub embeds
+   this file with <img> and the animation does not start there. Keeping the
+   first role visible by default costs nothing where the animation does run:
+   an infinite animation is always in its active phase, so the animated value
+   wins and role one still takes its turn in the cycle. */
+.role:first-of-type{opacity:1}
 @keyframes roll{
 0%{opacity:0;transform:translateY(5px)}
 2.25%{opacity:1;transform:translateY(0)}

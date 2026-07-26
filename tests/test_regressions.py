@@ -282,6 +282,48 @@ class HostileConfigEndToEnd(unittest.TestCase):
             shutil.rmtree(tmp, ignore_errors=True)
 
 
+class ContentDoesNotDependOnAnimation(unittest.TestCase):
+    """No card may rely on a running animation to display content.
+
+    GitHub renders these files with `<img>` on the profile page, and the
+    animation does not start in that context: the four role lines sat at
+    opacity 0 for a full cycle on the published page, so the ticker showed
+    nothing at all to any visitor, while the same file opened directly as a
+    document animated correctly. The reduced-motion fallback already had the
+    right idea; it was just scoped to a media query that was not matching.
+    """
+
+    def _base_style(self, svg: str) -> str:
+        """The stylesheet with the reduced-motion block removed."""
+        style = "\n".join(re.findall(r"<style[^>]*>(.*?)</style>", svg, re.S))
+        return re.sub(r"@media[^{]*\{.*?\}\}", "", style, flags=re.S)
+
+    def test_a_role_is_visible_without_animation(self):
+        for name in ("hero-dark", "hero-light"):
+            svg = (ROOT / "assets" / f"{name}.svg").read_text("utf-8")
+            base = self._base_style(svg)
+            self.assertRegex(
+                base.replace(" ", ""),
+                r"\.role:first-of-type\{opacity:1\}",
+                f"{name}: no static fallback, so the ticker is blank wherever "
+                "CSS animation does not run",
+            )
+
+    def test_every_animated_class_is_either_decorative_or_has_a_fallback(self):
+        """Flag any *new* class that is invisible until an animation runs."""
+        for path in sorted((ROOT / "assets").glob("*.svg")):
+            svg = path.read_text("utf-8")
+            base = self._base_style(svg).replace(" ", "")
+            for sel, body in re.findall(r"(\.[\w-]+)\{([^}]*)\}", base):
+                if "opacity:0" in body and "animation:" in body:
+                    fallback = f"{sel}:first-of-type{{opacity:1}}" in base
+                    self.assertTrue(
+                        fallback,
+                        f"{path.name}: {sel} is invisible without animation and "
+                        "has no static fallback",
+                    )
+
+
 class LiveRenderIsReproducible(unittest.TestCase):
     """A live build's output must survive the reproducibility gate.
 
