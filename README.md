@@ -64,9 +64,9 @@ Software engineer in Nairobi working across the full stack, with a second discip
 ## Build surface
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg?v=4bd7e426fb">
-  <source media="(prefers-color-scheme: light)" srcset="assets/stack-light.svg?v=35e0af83ff">
-  <img alt="Technology stack grouped by domain" src="assets/stack-dark.svg?v=4bd7e426fb" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg?v=2d95052ed4">
+  <source media="(prefers-color-scheme: light)" srcset="assets/stack-light.svg?v=2968125532">
+  <img alt="Technology stack grouped by domain" src="assets/stack-dark.svg?v=2d95052ed4" width="100%">
 </picture>
 
 ## Shipping

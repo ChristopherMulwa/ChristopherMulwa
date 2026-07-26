@@ -52,7 +52,7 @@
     {
       "label": "Platform",
       "accent": "rose",
-      "items": ["Linux", "Docker", "Nginx", "GitHub Actions", "Git", "Ubuntu"]
+      "items": ["Linux", "Docker", "Nginx", "ngrok", "GitHub Actions", "Git", "Ubuntu"]
     }
   ],
 
