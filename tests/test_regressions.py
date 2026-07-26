@@ -17,6 +17,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -370,6 +371,46 @@ class RadarPlotsRealData(unittest.TestCase):
         from generator.design import PALETTES
 
         self.assertEqual(contacts((), 0.0, PALETTES[0]), ())
+
+    def test_a_hostile_repository_name_cannot_escape_the_blip_title(self):
+        """Repository names are API data and the radar renders them as markup.
+
+        The <title> on each blip was first written by hand, straight into the
+        f-string, so a repository named `</title><script>alert(1)</script>`
+        closed the element and injected a live script element into an SVG
+        served from raw.githubusercontent.com -- which is not passed through
+        GitHub's HTML sanitiser. document() escapes the title and desc it is
+        handed; hand-rolled markup does not inherit that.
+        """
+        payloads = (
+            "</title><script>alert(1)</script>",
+            '"><script>alert(1)</script>',
+            "<foreignObject><body>x</body></foreignObject>",
+            "&lt;script&gt;",
+            "]]><script>alert(1)</script>",
+        )
+        for payload in payloads:
+            tmp = Path(tempfile.mkdtemp())
+            try:
+                shutil.copy(ROOT / "profile.json", tmp / "profile.json")
+                (tmp / "data").mkdir()
+                save_cache(tmp / "data" / "cache.json", Snapshot(
+                    generated_at="2026-01-02T03:04:05Z", live=True,
+                    top_repos=[{"name": payload, "pushed": "2026-01-01"}],
+                    languages=[{"name": "C", "share": 1.0}],
+                    activity=[1] * 52, activity_total=52))
+                self.assertEqual(entry.main(["--root", str(tmp), "--offline"]), 0)
+
+                svg = (tmp / "assets" / "hero-dark.svg").read_text("utf-8")
+                # Parse it. Escaped text in a text node is inert; only markup
+                # can be active, and only a parser can tell the difference.
+                root = ElementTree.fromstring(svg)
+                tags = {e.tag.rsplit("}", 1)[-1] for e in root.iter()}
+                self.assertNotIn("script", tags, f"script element from {payload!r}")
+                self.assertNotIn("foreignObject", tags, f"foreignObject from {payload!r}")
+                self.assertEqual(audit_output.audit(tmp, strict=True), [])
+            finally:
+                shutil.rmtree(tmp, ignore_errors=True)
 
     def test_the_dial_is_explained_in_the_description(self):
         """A plot that means something has to say so, or it is still decoration."""

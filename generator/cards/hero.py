@@ -32,7 +32,7 @@ from ..design import (
     rect,
     text,
 )
-from ..sanitize import clamp, human_count
+from ..sanitize import clamp, human_count, xml_text
 
 W, H = 920, 250
 PAD = 34
@@ -99,9 +99,14 @@ def _radar(cx: float, cy: float, r: float, p: Palette,
         rad = math.radians(deg)
         x = cx + math.cos(rad) * r * dist
         y = cy + math.sin(rad) * r * dist
+        # The repository name is API data, so it goes through the boundary
+        # before it becomes markup. Writing a <title> element by hand here is
+        # precisely how a sink gets missed: document() escapes the title and
+        # desc it is given, and hand-rolled markup does not inherit that.
         out.append(
             f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" fill="{color}" '
-            f'class="ping" style="animation-delay:{i * 0.9:.1f}s"><title>{name}</title></circle>'
+            f'class="ping" style="animation-delay:{i * 0.9:.1f}s">'
+            f'<title>{xml_text(name, 80)}</title></circle>'
         )
         # The halo is drawn wider than the dot it surrounds. At r=3 it sat
         # exactly on the dot, so wherever the expand animation does not run
