@@ -1,0 +1,119 @@
+{
+  "account_age_years": 2.5,
+  "activity": [
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    7,
+    2,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "activity_total": 18,
+  "followers": 0,
+  "following": 0,
+  "generated_at": "2026-07-26T14:51:08Z",
+  "languages": [
+    {
+      "name": "TypeScript",
+      "share": 0.8784
+    },
+    {
+      "name": "C",
+      "share": 0.1216
+    }
+  ],
+  "last_push": "2026-04-24",
+  "live": true,
+  "own_repos": 5,
+  "public_repos": 6,
+  "top_repos": [
+    {
+      "description": "",
+      "language": "",
+      "name": "ChristopherMulwa",
+      "pushed": "2026-04-24",
+      "stars": 0,
+      "url": "https://github.com/ChristopherMulwa/ChristopherMulwa"
+    },
+    {
+      "description": "",
+      "language": "HTML",
+      "name": "WHS-Handicap-Calculator-simulator",
+      "pushed": "2025-12-22",
+      "stars": 0,
+      "url": "https://github.com/ChristopherMulwa/WHS-Handicap-Calculator-simulator"
+    },
+    {
+      "description": "This repo will house the summary activities of my understanding in regards to the Ongoing CHAI HACKTHON 2025.",
+      "language": "TypeScript",
+      "name": "Team-DEVSIRCH-CHAI",
+      "pushed": "2025-09-17",
+      "stars": 0,
+      "url": "https://github.com/ChristopherMulwa/Team-DEVSIRCH-CHAI"
+    },
+    {
+      "description": "",
+      "language": "Shell",
+      "name": "Bash_Scripts",
+      "pushed": "2025-09-03",
+      "stars": 0,
+      "url": "https://github.com/ChristopherMulwa/Bash_Scripts"
+    },
+    {
+      "description": "",
+      "language": "C",
+      "name": "C_Scripts",
+      "pushed": "2025-03-24",
+      "stars": 0,
+      "url": "https://github.com/ChristopherMulwa/C_Scripts"
+    }
+  ],
+  "total_forks": 0,
+  "total_stars": 0
+}

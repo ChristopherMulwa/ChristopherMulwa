@@ -1,75 +1,143 @@
-<p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=22&duration=5000&pause=2000&color=22C55E&center=true&vCenter=true&width=600&lines=Software+Engineer;Security+Practitioner;Full-stack+%7C+Mobile+%7C+AppSec;Web+AppSec+%7C+Pentesting+%28training%29;Building+from+Nairobi+%F0%9F%87%B0%F0%9F%87%AA" alt="Software Engineer · Security Practitioner · Full-stack | Mobile | AppSec · Web AppSec | Pentesting (training) · Building from Nairobi" />
-</p>
+<!--
+  This file is generated. Do not edit it directly -- the next scheduled
+  build will overwrite your changes.
 
-<p align="center">
-  <a href="https://www.linkedin.com/in/christopher-mulwa/">
-    <img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" />
-  </a>
-</p>
+    content   ->  profile.json
+    layout    ->  generator/
+    schedule  ->  .github/workflows/build-profile.yml
 
-## About
+  Regenerate locally with:  make build   (or: python3 -m generator --offline)
+-->
 
-Software Engineer and Security Practitioner based in Nairobi, Kenya. I build full-stack applications with a security-first mindset.
+<div align="center">
 
-- Focus: Full-stack development, Application Security
-- Offensive security training: TryHackMe, HackerOne
-- Also learning: React Native / Expo
-- Education: BSc, Information Security & Forensics
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=7b72c57459">
+  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=ba027f4d25">
+  <img alt="Christopher Mulwa — I build products, then try to break them." src="assets/hero-dark.svg?v=7b72c57459" width="100%">
+</picture>
 
-## Tech stack
+&nbsp;
 
-**Languages**
+<a href="https://devsirchhub.co.ke"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/pill-devsirchhub-co-ke-dark.svg?v=c0556a46cf"><source media="(prefers-color-scheme: light)" srcset="assets/pill-devsirchhub-co-ke-light.svg?v=8b0575b505"><img alt="devsirchhub.co.ke" src="assets/pill-devsirchhub-co-ke-dark.svg?v=c0556a46cf" height="32"></picture></a><a href="https://www.linkedin.com/in/christopher-mulwa/"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/pill-linkedin-dark.svg?v=01dacb6356"><source media="(prefers-color-scheme: light)" srcset="assets/pill-linkedin-light.svg?v=f3da5a227f"><img alt="LinkedIn" src="assets/pill-linkedin-dark.svg?v=01dacb6356" height="32"></picture></a><a href="https://challengeme.africa"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/pill-challengeme-africa-dark.svg?v=70a2efc4dd"><source media="(prefers-color-scheme: light)" srcset="assets/pill-challengeme-africa-light.svg?v=f4f5d8f833"><img alt="challengeme.africa" src="assets/pill-challengeme-africa-dark.svg?v=70a2efc4dd" height="32"></picture></a>
 
-![Python](https://img.shields.io/badge/Python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Bash](https://img.shields.io/badge/Bash-121011?style=for-the-badge&logo=gnu-bash&logoColor=white)
+</div>
 
-**Web, mobile & design**
+## whoami
 
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Figma](https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white)
+Software engineer in Nairobi working across the full stack, with a second discipline in application security. Most of what I ship lately is golf technology — a live challenge platform, a tee-time booking system, and a coaching tool — built as one product family on a shared stack. The security half is not a label: it is the reason my architecture decisions look the way they do, and it is the training I put deliberate hours into rather than the thing I claim on a CV.
 
-**Backend & data**
+- Full-stack product work — Next.js and NestJS front to back, PostgreSQL underneath, React Native for mobile.
+- Application security — threat modelling, authorisation design, and the boring input-handling work that stops most real bugs.
+- Offensive security in training — structured practice on TryHackMe and HackerOne, applied back into how I build.
+- Systems that survive contact with users — caching, background work, and failure modes considered before launch, not after.
 
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+## Telemetry
 
-**Security**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/telemetry-dark.svg?v=6ac6658c81">
+  <source media="(prefers-color-scheme: light)" srcset="assets/telemetry-light.svg?v=e4f7173437">
+  <img alt="GitHub telemetry: repositories, stars, commit activity and language mix" src="assets/telemetry-dark.svg?v=6ac6658c81" width="100%">
+</picture>
 
-![Burp Suite](https://img.shields.io/badge/Burp_Suite-FF6633?style=for-the-badge&logo=burpsuite&logoColor=white)
-![Wireshark](https://img.shields.io/badge/Wireshark-1679A7?style=for-the-badge&logo=wireshark&logoColor=white)
-![Kali Linux](https://img.shields.io/badge/Kali_Linux-557C94?style=for-the-badge&logo=kalilinux&logoColor=white)
-![Parrot OS](https://img.shields.io/badge/Parrot_OS-15ACE5?style=for-the-badge&logo=parrotsecurity&logoColor=white)
+<details>
+<summary>Same numbers as text (for screen readers, and for when images are blocked)</summary>
 
-**Infra & tooling**
+| Metric | Value |
+| --- | --- |
+| Public repositories (non-fork) | 5 |
+| Stars earned | 0 |
+| Commits, trailing 52 weeks | 18 |
+| Followers | 0 |
+| Years on GitHub | 2\.5 |
+| Last public push | 2026-04-24 |
+| Snapshot | 2026-07-26 14:51 UTC (live) |
 
-![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
-![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
-![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
+| Language | Share |
+| --- | --- |
+| TypeScript | 88% |
+| C | 12% |
 
-## Featured projects
+</details>
 
-- [ChallengeMe](https://challengeme.africa) — Golf challenge platform. Live deployment.
-- TeeupTime — Tee-time booking platform for golf clubs. In development.
-- Swing — Golf coaching management platform for coaches and their students. In development.
+## Build surface
 
-## GitHub stats
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg?v=4bd7e426fb">
+  <source media="(prefers-color-scheme: light)" srcset="assets/stack-light.svg?v=35e0af83ff">
+  <img alt="Technology stack grouped by domain" src="assets/stack-dark.svg?v=4bd7e426fb" width="100%">
+</picture>
 
-<p>
-  <img src="https://github-readme-stats.vercel.app/api?username=ChristopherMulwa&show_icons=true&theme=github_dark&title_color=22C55E&text_color=C9D1D9&bg_color=0D1117&hide_border=true&include_all_commits=true&count_private=true" alt="GitHub stats" />
-</p>
+## Shipping
 
-<p>
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=ChristopherMulwa&theme=github_dark&title_color=22C55E&text_color=C9D1D9&bg_color=0D1117&hide_border=true&layout=compact&langs_count=8&hide=html,css" alt="Top languages" />
-</p>
+### ChallengeMe &nbsp;·&nbsp; `live`
+
+**Golf challenge platform, live in production.**
+
+Players create and settle head-to-head challenges: matchmaking, scoring, and a results history that has to stay correct when two people disagree about what happened on the course. Deployed and running for real users.
+
+`Next.js` `NestJS` `PostgreSQL` `Redis` `Docker`
+
+[challengeme.africa](https://challengeme.africa)
+
+### TeeupTime &nbsp;·&nbsp; `in build`
+
+**Tee-time booking for golf clubs.**
+
+Inventory, availability and reservations for clubs that currently run their bookings through a phone and a paper diary. The interesting problem is concurrency — two members booking the same slot at the same moment must resolve deterministically, and the club has to be able to override it.
+
+`Next.js` `NestJS` `PostgreSQL` `Redis`
+
+### Swing &nbsp;·&nbsp; `in build`
+
+**Coaching management for golf coaches and their students.**
+
+Lesson scheduling, student progress, and session notes in one place, with a mobile client for coaches who spend their working day on a range rather than at a desk. Multi-tenant from the first commit, because retrofitting tenant isolation is where authorisation bugs come from.
+
+`React Native` `Expo` `NestJS` `PostgreSQL`
+
+### WHS Handicap Calculator &nbsp;·&nbsp; `live`
+
+**World Handicap System calculator and simulator.**
+
+An implementation of the WHS handicap index rules — score differentials, the best-eight-of-twenty window, and the soft and hard caps — with a simulator for seeing how a round moves an index before it counts.
+
+`TypeScript`
+
+[github.com/ChristopherMulwa/WHS-Handicap-Calculator-simulator](https://github.com/ChristopherMulwa/WHS-Handicap-Calculator-simulator)
+
+## Security practice
+
+**Threat model before schema** — Every product above is multi-tenant. I decide who can see what, and how that is enforced at the query layer rather than the UI layer, before the first migration runs.
+
+**Authorisation is not authentication** — Most of the serious bugs I find in training are broken object-level authorisation, not broken login. I test for it on my own work the same way — by asking what happens when a valid session requests someone else&#39;s identifier.
+
+**Untrusted input has a boundary** — Input is validated and encoded where it enters and where it leaves, for the sink it is going to. This repository is a worked example: see generator/sanitize.py.
+
+**Secrets and permissions are scoped down** — Least privilege applied to CI tokens, database roles, and third-party keys. If a credential can only do one thing, a leak is an incident rather than a catastrophe.
+
+**Training that feeds back into building** — Structured offensive practice on TryHackMe and HackerOne. The point is not the badge count — it is that every class of bug I learn to exploit becomes a class of bug I stop shipping.
+
+## How this page builds itself
+
+This README is not hand-written. A scheduled workflow queries the GitHub API, renders every image in this repository, and commits the result only if the bytes changed.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/pipeline-dark.svg?v=21a41eff9e">
+  <source media="(prefers-color-scheme: light)" srcset="assets/pipeline-light.svg?v=cf66962212">
+  <img alt="Build pipeline and the security controls at each stage" src="assets/pipeline-dark.svg?v=21a41eff9e" width="100%">
+</picture>
+
+A profile README is a program with write access to a repository, so it is worth treating like one:
+
+- **No untrusted trigger.** The workflow runs on `schedule`, on manual dispatch, and on pushes to `main`. It never runs on `pull_request_target` or `issue_comment`, the two triggers behind most Actions token-theft incidents.
+- **No third-party runtime dependencies.** The generator is standard library Python. There is no `pip install` step in CI, so there is no package to typosquat or compromise.
+- **Least privilege.** Default permissions are empty; the single job that publishes is granted `contents: write` and nothing else. No personal access token is stored.
+- **Everything escaped at the boundary.** Repository names and descriptions come back from the API as untrusted strings and are encoded for their sink — Markdown or XML — before they reach it.
+- **Bounded egress.** Exactly one host is reachable, redirects are refused, and responses are capped and timed out.
+
+The full write-up, including the residual risks I chose to accept and why, is in [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md). The workflow itself is [here](.github/workflows/build-profile.yml).
+
+---
+
+<sub>Generated 2026-07-26 14:51 UTC · live snapshot · no third-party trackers, badge services, or analytics on this page.</sub>

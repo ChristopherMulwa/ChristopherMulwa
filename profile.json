@@ -1,0 +1,114 @@
+{
+  "$schema": "./docs/CONFIG.md",
+
+  "username": "ChristopherMulwa",
+  "displayName": "Christopher Mulwa",
+  "headline": "I build products, then try to break them.",
+  "location": "Nairobi, Kenya",
+
+  "roles": [
+    "Software Engineer · full-stack, mobile",
+    "Security Practitioner · web application security",
+    "Building golf technology for the African market",
+    "BSc Information Security & Forensics"
+  ],
+
+  "summary": "Software engineer in Nairobi working across the full stack, with a second discipline in application security. Most of what I ship lately is golf technology — a live challenge platform, a tee-time booking system, and a coaching tool — built as one product family on a shared stack. The security half is not a label: it is the reason my architecture decisions look the way they do, and it is the training I put deliberate hours into rather than the thing I claim on a CV.",
+
+  "focus": [
+    "Full-stack product work — Next.js and NestJS front to back, PostgreSQL underneath, React Native for mobile.",
+    "Application security — threat modelling, authorisation design, and the boring input-handling work that stops most real bugs.",
+    "Offensive security in training — structured practice on TryHackMe and HackerOne, applied back into how I build.",
+    "Systems that survive contact with users — caching, background work, and failure modes considered before launch, not after."
+  ],
+
+  "links": [
+    { "label": "devsirchhub.co.ke", "url": "https://devsirchhub.co.ke" },
+    { "label": "LinkedIn", "url": "https://www.linkedin.com/in/christopher-mulwa/" },
+    { "label": "challengeme.africa", "url": "https://challengeme.africa" }
+  ],
+
+  "stack": [
+    {
+      "label": "Languages",
+      "accent": "accent",
+      "items": ["Python", "TypeScript", "JavaScript", "SQL", "Bash"]
+    },
+    {
+      "label": "Product & mobile",
+      "accent": "cyan",
+      "items": ["Next.js", "React", "React Native", "Expo", "Tailwind CSS", "Figma"]
+    },
+    {
+      "label": "Services & data",
+      "accent": "violet",
+      "items": ["Node.js", "NestJS", "PostgreSQL", "Supabase", "Redis", "REST", "Prisma"]
+    },
+    {
+      "label": "Security",
+      "accent": "amber",
+      "items": ["Burp Suite", "OWASP ASVS", "Threat modelling", "Wireshark", "Nmap", "Kali Linux", "Parrot OS"]
+    },
+    {
+      "label": "Platform",
+      "accent": "rose",
+      "items": ["Linux", "Docker", "Nginx", "GitHub Actions", "Git", "Ubuntu"]
+    }
+  ],
+
+  "projects": [
+    {
+      "name": "ChallengeMe",
+      "tagline": "Golf challenge platform, live in production.",
+      "detail": "Players create and settle head-to-head challenges: matchmaking, scoring, and a results history that has to stay correct when two people disagree about what happened on the course. Deployed and running for real users.",
+      "stack": ["Next.js", "NestJS", "PostgreSQL", "Redis", "Docker"],
+      "status": "live",
+      "url": "https://challengeme.africa"
+    },
+    {
+      "name": "TeeupTime",
+      "tagline": "Tee-time booking for golf clubs.",
+      "detail": "Inventory, availability and reservations for clubs that currently run their bookings through a phone and a paper diary. The interesting problem is concurrency — two members booking the same slot at the same moment must resolve deterministically, and the club has to be able to override it.",
+      "stack": ["Next.js", "NestJS", "PostgreSQL", "Redis"],
+      "status": "building"
+    },
+    {
+      "name": "Swing",
+      "tagline": "Coaching management for golf coaches and their students.",
+      "detail": "Lesson scheduling, student progress, and session notes in one place, with a mobile client for coaches who spend their working day on a range rather than at a desk. Multi-tenant from the first commit, because retrofitting tenant isolation is where authorisation bugs come from.",
+      "stack": ["React Native", "Expo", "NestJS", "PostgreSQL"],
+      "status": "building"
+    },
+    {
+      "name": "WHS Handicap Calculator",
+      "tagline": "World Handicap System calculator and simulator.",
+      "detail": "An implementation of the WHS handicap index rules — score differentials, the best-eight-of-twenty window, and the soft and hard caps — with a simulator for seeing how a round moves an index before it counts.",
+      "stack": ["TypeScript"],
+      "status": "live",
+      "url": "https://github.com/ChristopherMulwa/WHS-Handicap-Calculator-simulator"
+    }
+  ],
+
+  "practices": [
+    {
+      "label": "Threat model before schema",
+      "detail": "Every product above is multi-tenant. I decide who can see what, and how that is enforced at the query layer rather than the UI layer, before the first migration runs."
+    },
+    {
+      "label": "Authorisation is not authentication",
+      "detail": "Most of the serious bugs I find in training are broken object-level authorisation, not broken login. I test for it on my own work the same way — by asking what happens when a valid session requests someone else's identifier."
+    },
+    {
+      "label": "Untrusted input has a boundary",
+      "detail": "Input is validated and encoded where it enters and where it leaves, for the sink it is going to. This repository is a worked example: see generator/sanitize.py."
+    },
+    {
+      "label": "Secrets and permissions are scoped down",
+      "detail": "Least privilege applied to CI tokens, database roles, and third-party keys. If a credential can only do one thing, a leak is an incident rather than a catastrophe."
+    },
+    {
+      "label": "Training that feeds back into building",
+      "detail": "Structured offensive practice on TryHackMe and HackerOne. The point is not the badge count — it is that every class of bug I learn to exploit becomes a class of bug I stop shipping."
+    }
+  ]
+}

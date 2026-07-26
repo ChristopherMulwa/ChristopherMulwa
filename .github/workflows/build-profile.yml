@@ -1,0 +1,114 @@
+name: build profile
+
+# ---------------------------------------------------------------------------
+# Triggers
+#
+# Only contexts the repository owner controls. Deliberately absent:
+#
+#   pull_request_target  - runs with a write-capable token in the context of
+#                          the *base* repository while checking out a fork's
+#                          code. This is the single most common route to
+#                          Actions token theft.
+#   issue_comment        - body is attacker-controlled text that people
+#     workflow_run         routinely interpolate into `run:` blocks.
+#
+# A fork opening a pull request against this repository cannot cause this
+# workflow to run at all.
+# ---------------------------------------------------------------------------
+on:
+  schedule:
+    # 04:17 UTC. An off-the-hour minute so the job is not queued behind the
+    # spike of every cron on GitHub that fires at :00.
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "generator/**"
+      - "profile.json"
+      - ".github/workflows/build-profile.yml"
+
+# Deny by default at the workflow level. The one job that needs to write says
+# so for itself, and gets nothing else.
+permissions: {}
+
+# One build at a time. Two concurrent runs would race on the same branch and
+# one would fail its push; queueing is correct here, cancelling is not.
+concurrency:
+  group: build-profile
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+
+    steps:
+      # ---------------------------------------------------------------------
+      # No third-party actions are used anywhere in this workflow -- not even
+      # actions/checkout. Every `uses:` is a supply-chain dependency that runs
+      # arbitrary code in a job holding a write-capable token, and pinning by
+      # commit SHA only reduces that risk rather than removing it. The four
+      # git commands below are the entire replacement.
+      # ---------------------------------------------------------------------
+      - name: Fetch repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git init --quiet .
+          # Credentials are passed per-invocation and never written to
+          # .git/config, so nothing later in the job can read them back out.
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --quiet --depth 1 "$REMOTE" "$GITHUB_REF_NAME"
+          git checkout --quiet FETCH_HEAD
+
+      - name: Show interpreter
+        run: python3 --version
+
+      # The generator imports nothing outside the standard library, so there
+      # is no install step here. Nothing to resolve means nothing to poison.
+      - name: Render profile
+        env:
+          # Read-only usage: raises the API rate limit and nothing more.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Interpolated into `env:`, never into `run:`. The owner of the
+          # repository decides whose profile is built, so a fork builds its
+          # own rather than this one.
+          PROFILE_USER: ${{ github.repository_owner }}
+        run: python3 -m generator
+
+      - name: Audit generated output
+        env:
+          # Deliberately passed in: the audit fails the build if this value
+          # appears anywhere in the generated output. Without it in the
+          # environment, that check has nothing to compare against.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/audit_output.py
+
+      - name: Commit if the output changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # `git add` exits non-zero if any pathspec matches nothing --
+          # including -A against a directory that does not exist yet -- and
+          # under `set -e` that aborts the whole step. Stage only what is
+          # actually there.
+          for target in README.md assets data; do
+            if [ -e "$target" ]; then
+              git add -A -- "$target"
+            fi
+          done
+          if git diff --cached --quiet; then
+            echo "no change; nothing to publish"
+            exit 0
+          fi
+          git -c user.name="profile-builder" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit --quiet -m "chore(profile): refresh generated content [skip ci]"
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --quiet "$REMOTE" "HEAD:${GITHUB_REF_NAME}"
+          echo "published"

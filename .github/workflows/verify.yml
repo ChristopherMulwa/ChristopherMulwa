@@ -1,0 +1,46 @@
+name: verify
+
+# `pull_request` (not `pull_request_target`): a fork's pull request runs with
+# a read-only token and no access to repository secrets, which is exactly what
+# a verification job should have.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+
+    steps:
+      - name: Fetch repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git init --quiet .
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --quiet --depth 1 "$REMOTE" "$GITHUB_SHA"
+          git checkout --quiet FETCH_HEAD
+
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -v
+
+      # Proves the committed README and assets are exactly what the current
+      # generator produces from the committed snapshot. Without this, a change
+      # to the renderer could sit in the repository while the published page
+      # still shows output from the old one.
+      - name: Committed output matches a fresh render
+        run: python3 -m generator --check
+
+      - name: Every SVG is well-formed XML
+        run: python3 tools/audit_output.py --strict

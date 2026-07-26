@@ -1,0 +1,12 @@
+# Generated intermediates only. README.md, assets/ and data/cache.json are
+# deliberately committed: the published page must be reproducible from the
+# repository, and CI verifies that it is.
+*.tmp
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+
+# Local scratch space holding the previous hand-written README and a build
+# kit. Kept on disk, never published: `git add -A` must not pick it up.
+_to_delete/
