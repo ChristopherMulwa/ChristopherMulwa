@@ -66,6 +66,8 @@ Security engineer who builds. BSc Information Security and Forensics, 2019 to 20
 
 **Input is hostile until proven otherwise.** Strict schemas at every boundary, including the environment at boot, my own config, and this page: every string from the GitHub API or profile.json passes one sanitiser before it reaches Markdown or SVG. [Threat model](https://github.com/ChristopherMulwa/ChristopherMulwa/blob/main/docs/THREAT-MODEL.md)
 
+**If it is not observed, it is not running.** Metrics, traces and logs go through one collector to one place, and every alert maps to a severity with a fixed set of sinks. An event nobody mapped defaults to the middle severity, so a forgotten mapping shows up as noise rather than silence. A failed webhook signature pages as an attack, not a bug; a mismatch between a provider&#39;s balance and the ledger pages as an incident. Every alert has a runbook, and by the time a log line leaves the process it carries no personal data.
+
 **I test my own work first.** OWASP API Security Top 10 and MASVS before a launch, findings in one register that closes only on a merged and re-tested fix. That is self-review with tools, and I label it as such.
 
 ## How I work
@@ -93,9 +95,9 @@ Players pay entry fees by mobile money, club admins run events and payouts from 
 ## Stack
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg?v=22649102ac">
-  <source media="(prefers-color-scheme: light)" srcset="assets/stack-light.svg?v=adb03730ee">
-  <img alt="Technology stack grouped by domain" src="assets/stack-dark.svg?v=22649102ac" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg?v=882abc71ae">
+  <source media="(prefers-color-scheme: light)" srcset="assets/stack-light.svg?v=20f499507d">
+  <img alt="Technology stack grouped by domain" src="assets/stack-dark.svg?v=882abc71ae" width="100%">
 </picture>
 
 ## Learning

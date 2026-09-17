@@ -50,6 +50,10 @@
       "urlLabel": "Threat model"
     },
     {
+      "label": "If it is not observed, it is not running",
+      "detail": "Metrics, traces and logs go through one collector to one place, and every alert maps to a severity with a fixed set of sinks. An event nobody mapped defaults to the middle severity, so a forgotten mapping shows up as noise rather than silence. A failed webhook signature pages as an attack, not a bug; a mismatch between a provider's balance and the ledger pages as an incident. Every alert has a runbook, and by the time a log line leaves the process it carries no personal data."
+    },
+    {
       "label": "I test my own work first",
       "detail": "OWASP API Security Top 10 and MASVS before a launch, findings in one register that closes only on a merged and re-tested fix. That is self-review with tools, and I label it as such."
     }
@@ -109,7 +113,7 @@
     {
       "label": "Platform & ops",
       "accent": "rose",
-      "items": ["Docker", "Render", "Vercel", "Fly.io", "GitHub Actions", "Grafana", "Sentry"]
+      "items": ["Docker", "Render", "Vercel", "Fly.io", "GitHub Actions", "OpenTelemetry", "Grafana", "Sentry"]
     },
     {
       "label": "Agents",
