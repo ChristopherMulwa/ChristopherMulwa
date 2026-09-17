@@ -8,7 +8,8 @@ Design rules for this module:
   step in CI that an attacker can poison.
 * **Egress allow-list.** Exactly one host is contactable. The URL is built
   from validated components; no caller-supplied string is concatenated into a
-  path without passing the username allow-list first.
+  path without passing the username allow-list first. The one GraphQL query
+  takes the login as a variable, never by interpolation into the query text.
 * **Bounded everything.** Connect/read timeouts, a response size ceiling, a
   redirect ban, and a cap on pagination. A hostile or malfunctioning endpoint
   cannot hang the build or exhaust the runner.
@@ -30,8 +31,11 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from ..sanitize import clamp
+
 API_HOST = "api.github.com"
 API_ROOT = f"https://{API_HOST}"
+GRAPHQL_PATH = "/graphql"
 USER_AGENT = "profile-generator (+https://github.com/features/actions)"
 
 CONNECT_TIMEOUT = 10          # seconds
@@ -39,6 +43,23 @@ MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 MAX_PAGES = 4                 # 4 x 100 repositories is well past what we render
 MAX_RETRIES = 2
 RETRY_BACKOFF = 2.0           # seconds, doubled per attempt
+
+# Ceilings for the contribution counters. Well above anything a person
+# produces in a year; they exist so an absurd value cannot reach the geometry.
+MAX_CONTRIBUTIONS = 1_000_000
+MAX_WEEK_CONTRIBUTIONS = 20_000
+MAX_CALENDAR_WEEKS = 53
+
+# The login travels as a GraphQL variable. It has already passed the username
+# allow-list, but keeping it out of the query text means the query is a
+# constant and there is no string to get injection wrong in.
+CONTRIBUTIONS_QUERY = (
+    "query($login: String!) { user(login: $login) { contributionsCollection { "
+    "totalCommitContributions totalPullRequestContributions "
+    "totalPullRequestReviewContributions totalIssueContributions "
+    "restrictedContributionsCount contributionCalendar { totalContributions "
+    "weeks { contributionDays { contributionCount } } } } } }"
+)
 
 # Languages that describe packaging or markup rather than authored work.
 # Excluded from the language mix so the chart reflects engineering, not
@@ -64,6 +85,16 @@ class Snapshot:
     activity: list[int] = field(default_factory=list)   # commits per week, oldest first
     activity_total: int = 0
     last_push: str = ""
+    # Contributions calendar for the trailing year, public and private. Zero
+    # and empty until a build with a token has run; caches written before
+    # these fields existed load with these defaults.
+    contributions_total: int = 0
+    contributions_private: int = 0
+    contributions_weeks: list[int] = field(default_factory=list)   # oldest first
+    contributions_commits: int = 0
+    contributions_prs: int = 0
+    contributions_reviews: int = 0
+    contributions_issues: int = 0
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -82,11 +113,14 @@ _opener = urllib.request.build_opener(_NoRedirect)
 _opener.addheaders = []
 
 
-def _get(path: str, token: str) -> Any | None:
-    """GET a repository- or user-scoped API path. Returns parsed JSON or ``None``.
+def _request(path: str, token: str, *, method: str = "GET",
+             body: bytes | None = None) -> Any | None:
+    """Issue one bounded request to the API host. Returns parsed JSON or ``None``.
 
     ``path`` must already be composed of validated components -- see
-    :func:`generator.config._username`.
+    :func:`generator.config._username`. Every failure mode (non-200, oversize,
+    malformed JSON, timeout, redirect) collapses to ``None`` so callers only
+    have one branch to write.
     """
     url = f"{API_ROOT}{path}"
     if not url.startswith(f"https://{API_HOST}/"):
@@ -98,11 +132,13 @@ def _get(path: str, token: str) -> Any | None:
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": USER_AGENT,
     }
+    if body is not None:
+        headers["Content-Type"] = "application/json"
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
     for attempt in range(MAX_RETRIES + 1):
-        request = urllib.request.Request(url, headers=headers, method="GET")
+        request = urllib.request.Request(url, data=body, headers=headers, method=method)
         try:
             with _opener.open(request, timeout=CONNECT_TIMEOUT) as response:
                 if response.status != 200:
@@ -126,6 +162,29 @@ def _get(path: str, token: str) -> Any | None:
             print(f"  ! {path} -> {type(exc).__name__}")
             return None
     return None
+
+
+def _get(path: str, token: str) -> Any | None:
+    """GET a repository- or user-scoped API path. Returns parsed JSON or ``None``."""
+    return _request(path, token)
+
+
+def _graphql(query: str, variables: dict[str, Any], token: str) -> dict[str, Any] | None:
+    """POST one GraphQL query. Returns the ``data`` object or ``None``.
+
+    GraphQL reports most failures as a 200 with an ``errors`` list, so the
+    HTTP status alone is not enough: a response that carries errors, or whose
+    ``data`` is not an object, is treated as no data. There is no anonymous
+    GraphQL access, so without a token no request is made at all.
+    """
+    if not token:
+        return None
+    body = json.dumps({"query": query, "variables": variables}).encode("utf-8")
+    payload = _request(GRAPHQL_PATH, token, method="POST", body=body)
+    if not isinstance(payload, dict) or payload.get("errors"):
+        return None
+    data = payload.get("data")
+    return data if isinstance(data, dict) else None
 
 
 def _iso_now() -> str:
@@ -156,17 +215,16 @@ def _collect_repos(username: str, token: str) -> list[dict[str, Any]]:
 
 
 def _weekly_activity(username: str, token: str, repos: list[dict[str, Any]]) -> list[int]:
-    """Commit activity for the last 52 weeks.
+    """Commit activity for the last 52 weeks, public repositories only.
 
-    The contributions calendar lives behind the GraphQL API and needs a token
-    with ``read:user``; the automatic ``GITHUB_TOKEN`` often does not have it.
-    Rather than asking for a long-lived personal access token -- a credential
-    that would sit in the repository's secrets with far more power than this
-    job needs -- activity is reconstructed from the per-repository commit
-    statistics available to a read-only token.
+    Reconstructed from per-repository commit statistics, which any read-only
+    token can see. It is the fallback series for the activity chart when the
+    contributions calendar (see :func:`_contributions`) is unavailable, so a
+    build without a token, or one whose GraphQL call failed, still draws
+    something true rather than nothing.
 
-    This under-counts private and organisation work, which is the honest
-    trade: fewer numbers, no over-privileged secret.
+    This under-counts private and organisation work, and the chart says so
+    in its caption whenever this series is the one on display.
     """
     weeks = [0] * 52
     considered = 0
@@ -191,6 +249,52 @@ def _weekly_activity(username: str, token: str, repos: list[dict[str, Any]]) -> 
         for i, value in enumerate(tail):
             weeks[offset + i] += max(0, min(value, 500))
     return weeks
+
+
+def _count(value: object, high: int = MAX_CONTRIBUTIONS) -> int:
+    return int(clamp(value, 0, high))
+
+
+def _contributions(snap: Snapshot, username: str, token: str) -> None:
+    """Fill the contribution fields from the GraphQL contributions calendar.
+
+    This is the only place the generator sees private work. The calendar's
+    totals include private repositories whenever the token belongs to the
+    profile owner, or the owner has enabled "Include private contributions on
+    my profile"; ``restrictedContributionsCount`` is the private slice. Any
+    failure leaves the fields at their defaults, which the cards render as
+    the public-only view, the same way a failed REST call does.
+    """
+    data = _graphql(CONTRIBUTIONS_QUERY, {"login": username}, token)
+    user = data.get("user") if data else None
+    collection = user.get("contributionsCollection") if isinstance(user, dict) else None
+    if not isinstance(collection, dict):
+        print("  ! contributions calendar unavailable; rendering public activity only")
+        return
+
+    snap.contributions_commits = _count(collection.get("totalCommitContributions"))
+    snap.contributions_prs = _count(collection.get("totalPullRequestContributions"))
+    snap.contributions_reviews = _count(collection.get("totalPullRequestReviewContributions"))
+    snap.contributions_issues = _count(collection.get("totalIssueContributions"))
+    snap.contributions_private = _count(collection.get("restrictedContributionsCount"))
+
+    calendar = collection.get("contributionCalendar")
+    if not isinstance(calendar, dict):
+        return
+    snap.contributions_total = _count(calendar.get("totalContributions"))
+    weeks_raw = calendar.get("weeks")
+    weeks: list[int] = []
+    for week in (weeks_raw if isinstance(weeks_raw, list) else [])[-MAX_CALENDAR_WEEKS:]:
+        days = week.get("contributionDays") if isinstance(week, dict) else None
+        total = 0
+        for day in (days if isinstance(days, list) else []):
+            if isinstance(day, dict):
+                total += _count(day.get("contributionCount"), MAX_WEEK_CONTRIBUTIONS)
+        weeks.append(_count(total, MAX_WEEK_CONTRIBUTIONS))
+    snap.contributions_weeks = weeks
+    # The private count is a slice of the total; the API should never say
+    # otherwise, but the percentage downstream must not exceed 100 if it does.
+    snap.contributions_private = min(snap.contributions_private, snap.contributions_total)
 
 
 def fetch(username: str, token: str) -> Snapshot:
@@ -244,6 +348,7 @@ def fetch(username: str, token: str) -> Snapshot:
 
     snap.activity = _weekly_activity(username, token, own)
     snap.activity_total = sum(snap.activity)
+    _contributions(snap, username, token)
     snap.live = True
     return snap
 

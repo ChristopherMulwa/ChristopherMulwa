@@ -63,7 +63,7 @@ def render(p: Palette, *, groups, note: str) -> str:
 
     body = [
         rect(0, 0, W, height, fill=p.canvas, stroke=p.border, rx=12),
-        text("BUILD SURFACE", PAD, 30, size=10, fill=p.muted, weight="600",
+        text("STACK", PAD, 30, size=10, fill=p.muted, weight="600",
              letter_spacing=1.8),
         text(note, W - PAD, 30, size=9.5, fill=p.faint, anchor="end"),
     ]

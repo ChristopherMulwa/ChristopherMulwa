@@ -9,9 +9,8 @@ value goes through :mod:`generator.sanitize` first.
 
 from __future__ import annotations
 
+from .cards.telemetry import telemetry_rows
 from .sanitize import (
-    clamp,
-    human_count,
     md_cell,
     md_code,
     md_link,
@@ -35,6 +34,7 @@ MARKER = (
 STATUS_LABEL = {
     "live": "live",
     "building": "in build",
+    "paused": "paused",
     "design": "in design",
     "archived": "archived",
     "private": "private",
@@ -78,6 +78,20 @@ def _pill(slug_name: str, link, versions: dict[str, str]) -> str:
     return f'<a href="{url}">{inner}</a>' if url else inner
 
 
+def _practice_block(out: list[str], items) -> None:
+    """Bold lead-in, then the detail. The lead-in ends in a period rather than
+    a dash so it reads as a sentence, not a form field."""
+    for item in items:
+        line = md_text(item.detail, 600)
+        if item.label.strip():
+            label = md_text(item.label, 120).rstrip(".")
+            line = f"**{label}.** {line}"
+        if item.url:
+            line += " " + md_link(item.url_label or item.url.replace("https://", ""), item.url)
+        out.append(line)
+        out.append("")
+
+
 def build(cfg, snap, versions: dict[str, str], pill_slugs: list[tuple[str, object]],
           built: str) -> str:
     out: list[str] = [MARKER, ""]
@@ -88,7 +102,7 @@ def build(cfg, snap, versions: dict[str, str], pill_slugs: list[tuple[str, objec
     out.append(
         _picture(
             "hero",
-            f"{md_text(cfg.display_name, 80)} — {md_text(cfg.headline, 80)}",
+            f"{md_text(cfg.display_name, 80)}: {md_text(cfg.headline, 80)}",
             versions,
         )
     )
@@ -106,16 +120,20 @@ def build(cfg, snap, versions: dict[str, str], pill_slugs: list[tuple[str, objec
     out.append(md_text(cfg.summary, 1200))
     out.append("")
     for item in cfg.focus:
-        out.append(f"- {md_text(item, 200)}")
+        out.append(f"- {md_text(item, 280)}")
     out.append("")
+    if cfg.aside:
+        out.append(f"> {md_text(cfg.aside, 600)}")
+        out.append("")
 
     # ---- telemetry ------------------------------------------------------
-    out.append("## Telemetry")
+    out.append("## Activity")
     out.append("")
     out.append(
         _picture(
             "telemetry",
-            "GitHub telemetry: repositories, stars, commit activity and language mix",
+            "GitHub telemetry: contributions across public and private repositories, "
+            "weekly activity, and work by type",
             versions,
         )
     )
@@ -128,34 +146,22 @@ def build(cfg, snap, versions: dict[str, str], pill_slugs: list[tuple[str, objec
     out.append("")
     out.append("| Metric | Value |")
     out.append("| --- | --- |")
-    rows = (
-        ("Public repositories (non-fork)", human_count(snap.own_repos or snap.public_repos)),
-        ("Stars earned", human_count(snap.total_stars)),
-        ("Commits, trailing 52 weeks", human_count(snap.activity_total)),
-        ("Followers", human_count(snap.followers)),
-        ("Years on GitHub", f"{snap.account_age_years:g}"),
-        ("Last public push", snap.last_push or "unknown"),
-        ("Snapshot", f"{built} ({'live' if snap.live else 'cached'})"),
-    )
-    for label, value in rows:
+    for label, value in telemetry_rows(snap, built):
         out.append(f"| {md_cell(label)} | {md_cell(value)} |")
-    if snap.languages:
-        out.append("")
-        out.append("| Language | Share |")
-        out.append("| --- | --- |")
-        total = sum(clamp(item.get("share"), 0, 1) for item in snap.languages) or 1.0
-        for item in snap.languages[:5]:
-            share = clamp(item.get("share"), 0, 1) / total * 100
-            out.append(f"| {md_cell(item.get('name'))} | {share:.0f}% |")
     out.append("")
     out.append("</details>")
     out.append("")
 
-    # ---- stack ----------------------------------------------------------
-    out.append("## Build surface")
+    # ---- security practice ---------------------------------------------
+    out.append("## Security practice")
     out.append("")
-    out.append(_picture("stack", "Technology stack grouped by domain", versions))
-    out.append("")
+    _practice_block(out, cfg.practices)
+
+    # ---- working method -------------------------------------------------
+    if cfg.workflow:
+        out.append("## How I work")
+        out.append("")
+        _practice_block(out, cfg.workflow)
 
     # ---- projects -------------------------------------------------------
     out.append("## Shipping")
@@ -176,11 +182,18 @@ def build(cfg, snap, versions: dict[str, str], pill_slugs: list[tuple[str, objec
             out.append(md_link(project.url.replace("https://", ""), project.url))
             out.append("")
 
-    # ---- security practice ---------------------------------------------
-    out.append("## Security practice")
+    # ---- stack ----------------------------------------------------------
+    out.append("## Stack")
     out.append("")
-    for practice in cfg.practices:
-        out.append(f"**{md_text(practice.label, 120)}** — {md_text(practice.detail, 400)}")
+    out.append(_picture("stack", "Technology stack grouped by domain", versions))
+    out.append("")
+
+    # ---- learning -------------------------------------------------------
+    if cfg.learning:
+        out.append("## Learning")
+        out.append("")
+        for item in cfg.learning:
+            out.append(f"- {md_text(item, 280)}")
         out.append("")
 
     # ---- no self-description --------------------------------------------
@@ -200,7 +213,7 @@ def build(cfg, snap, versions: dict[str, str], pill_slugs: list[tuple[str, objec
     out.append("")
     out.append(
         f'<sub>Generated {md_text(built, 40)} · '
-        f"{'live snapshot' if snap.live else 'cached snapshot — the API was unreachable at build time'} · "
+        f"{'live snapshot' if snap.live else 'cached snapshot, the API was unreachable at build time'} · "
         f"no third-party trackers, badge services, or analytics on this page.</sub>"
     )
     out.append("")

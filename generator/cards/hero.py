@@ -138,15 +138,17 @@ def render(
     headline: str,
     roles: tuple[str, ...],
     location: str,
-    stars: int,
     repos: int,
-    followers: int,
     built: str,
     live: bool,
+    contributions: int = 0,
+    private_share: int = 0,
     plots: tuple[tuple[str, str], ...] = (),
     now_epoch: float = 0.0,
 ) -> str:
     roles = roles or ("Engineer",)
+    contributions = int(clamp(contributions, 0, 10**9))
+    private_share = int(clamp(private_share, 0, 100))
     cycle = len(roles) * ROLE_SECONDS
     window = 100.0 / len(roles)
 
@@ -171,15 +173,27 @@ def render(
 /* The ticker must never be the only way to read a role. Where the animation
    does not run, every .role stays at opacity 0 and the line renders blank --
    which is what happens on the profile page itself, because GitHub embeds
-   this file with <img> and the animation does not start there. Keeping the
+   this file with <img> and the animation does not start there. The first
+   role therefore carries an explicit class that sets it visible. (An earlier
+   version used .role:first-of-type, which silently matched the backdrop
+   group that precedes the roles, so the fallback never applied.) Keeping the
    first role visible by default costs nothing where the animation does run:
    an infinite animation is always in its active phase, so the animated value
-   wins and role one still takes its turn in the cycle. */
-.role:first-of-type{{opacity:1}}
+   wins and role one still takes its turn in the cycle.
+   Measured in Chrome: inside <img> the animation is applied but frozen at
+   time zero, so the 0% keyframe is what renders, and a 0% keyframe of
+   opacity 0 blanks the line regardless of the base rule. The first role
+   therefore runs its own keyframes that begin visible. */
+.role-static{{opacity:1;animation-name:roll-first}}
 @keyframes roll{{
 0%{{opacity:0;transform:translateY(5px)}}
-{window * 0.09:.2f}%{{opacity:1;transform:translateY(0)}}
-{window * 0.82:.2f}%{{opacity:1;transform:translateY(0)}}
+{window * 0.05:.2f}%{{opacity:1;transform:translateY(0)}}
+{window * 0.95:.2f}%{{opacity:1;transform:translateY(0)}}
+{window:.2f}%{{opacity:0;transform:translateY(-5px)}}
+100%{{opacity:0}}}}
+@keyframes roll-first{{
+0%{{opacity:1;transform:translateY(0)}}
+{window * 0.95:.2f}%{{opacity:1;transform:translateY(0)}}
 {window:.2f}%{{opacity:0;transform:translateY(-5px)}}
 100%{{opacity:0}}}}
 .sweep{{animation:spin 5.5s linear infinite}}
@@ -192,7 +206,7 @@ def render(
 @keyframes scan{{0%,100%{{opacity:0}}45%{{opacity:.5}}55%{{opacity:.5}}}}
 @media (prefers-reduced-motion:reduce){{
 .role,.sweep,.ping,.ping-ring,.beam{{animation:none}}
-.role:first-of-type{{opacity:1}}}}
+.role-static{{opacity:1}}}}
 """
 
     # Radius and centre are chosen so the outer ring clears the build stamp
@@ -238,7 +252,7 @@ def render(
         body.append(
             group(
                 text(role, PAD, y + 118, size=15, fill=p.accent, weight="500"),
-                cls="role",
+                cls="role role-static" if i == 0 else "role",
                 style=f"animation-delay:{i * ROLE_SECONDS:g}s",
             )
         )
@@ -253,8 +267,8 @@ def render(
     facts = (
         (location, p.muted),
         (f"{human_count(repos)} public repos", p.muted),
-        (f"{human_count(stars)} stars earned", p.muted),
-        (f"{human_count(followers)} followers", p.muted),
+        (f"{human_count(contributions)} contributions · 12 months", p.muted),
+        (f"{private_share}% in private repos", p.muted),
     )
     x = PAD
     fy = H - PAD + 6
@@ -273,10 +287,12 @@ def render(
     return document(
         width=W,
         height=H,
-        title=f"{display_name} — {headline}",
+        title=f"{display_name}: {headline}",
         desc=(
             f"Banner for {display_name}. {', '.join(roles)}. Based in {location}. "
-            f"{repos} public repositories, {stars} stars, {followers} followers. "
+            f"{int(clamp(repos, 0, 10**9))} public repositories, {contributions} "
+            f"contributions in the last 12 months, {private_share}% of them in "
+            "private repositories. "
             + (
                 f"The dial plots {len(blips)} public "
                 f"{'repository' if len(blips) == 1 else 'repositories'} by how "

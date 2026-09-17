@@ -60,6 +60,8 @@ class StackGroup:
 class Practice:
     label: str
     detail: str
+    url: str = ""
+    url_label: str = ""
 
 
 @dataclass(frozen=True)
@@ -75,6 +77,9 @@ class Config:
     stack: tuple[StackGroup, ...]
     projects: tuple[Project, ...]
     practices: tuple[Practice, ...]
+    aside: str = ""
+    workflow: tuple[Practice, ...] = ()
+    learning: tuple[str, ...] = ()
     accent_rotation: tuple[str, ...] = field(default=("accent", "cyan", "violet", "amber"))
 
 
@@ -153,7 +158,7 @@ def _username(value: str) -> str:
 
 
 _ACCENTS = {"accent", "cyan", "violet", "amber", "rose"}
-_STATUSES = {"live", "building", "design", "archived", "private"}
+_STATUSES = {"live", "building", "paused", "design", "archived", "private"}
 
 
 # --------------------------------------------------------------------------
@@ -182,7 +187,8 @@ def load(path: Path) -> Config:
         data,
         {
             "$schema", "username", "displayName", "headline", "roles", "location",
-            "summary", "focus", "links", "stack", "projects", "practices",
+            "summary", "focus", "aside", "links", "stack", "projects", "practices",
+            "workflow", "learning",
         },
         "profile",
     )
@@ -247,18 +253,8 @@ def load(path: Path) -> Config:
             )
         )
 
-    practices = []
-    for i, item in enumerate(_require(data, "practices", list, "profile")):
-        where = f"profile.practices[{i}]"
-        if not isinstance(item, dict):
-            raise ConfigError(f"{where}: expected an object")
-        _reject_unknown(item, {"label", "detail"}, where)
-        practices.append(
-            Practice(
-                label=_string(item, "label", where, limit=MAX_SHORT),
-                detail=_string(item, "detail", where),
-            )
-        )
+    practices = _practice_list(data, "practices", required=True)
+    workflow = _practice_list(data, "workflow", required=False)
 
     return Config(
         username=username,
@@ -267,9 +263,44 @@ def load(path: Path) -> Config:
         roles=_string_list(data, "roles", "profile", limit=64, max_items=8),
         location=_string(data, "location", "profile", limit=MAX_SHORT),
         summary=_string(data, "summary", "profile", limit=1200),
-        focus=_string_list(data, "focus", "profile", limit=280, max_items=8),
+        focus=_string_list(data, "focus", "profile", limit=280, max_items=8,
+                           required=False),
         links=tuple(links),
         stack=tuple(stack),
         projects=tuple(projects),
-        practices=tuple(practices),
+        practices=practices,
+        aside=_string(data, "aside", "profile", limit=600, required=False),
+        workflow=workflow,
+        learning=_string_list(data, "learning", "profile", limit=280, max_items=8,
+                              required=False),
     )
+
+
+def _practice_list(data: dict, key: str, *, required: bool) -> tuple[Practice, ...]:
+    """A list of ``{label, detail}`` pairs. Used for both the security practice
+    and the working-method sections, which share a shape and a renderer."""
+    if key not in data and not required:
+        return ()
+    out = []
+    for i, item in enumerate(_require(data, key, list, "profile")):
+        where = f"profile.{key}[{i}]"
+        if not isinstance(item, dict):
+            raise ConfigError(f"{where}: expected an object")
+        _reject_unknown(item, {"label", "detail", "url", "urlLabel"}, where)
+        url_in = _string(item, "url", where, required=False)
+        url = safe_url(url_in) if url_in else ""
+        if url_in and not url:
+            raise ConfigError(f"{where}.url: rejected by the URL allow-list")
+        out.append(
+            Practice(
+                # An entry without a label renders as a plain paragraph, so a
+                # section can mix a story told in prose with labelled items.
+                label=_string(item, "label", where, limit=MAX_SHORT, required=False),
+                detail=_string(item, "detail", where),
+                url=url,
+                url_label=_string(item, "urlLabel", where, limit=MAX_SHORT, required=False),
+            )
+        )
+    if len(out) > 12:
+        raise ConfigError(f"profile.{key}: at most 12 entries")
+    return tuple(out)

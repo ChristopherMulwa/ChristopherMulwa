@@ -300,28 +300,61 @@ class ContentDoesNotDependOnAnimation(unittest.TestCase):
         return re.sub(r"@media[^{]*\{.*?\}\}", "", style, flags=re.S)
 
     def test_a_role_is_visible_without_animation(self):
+        """The fallback must be a class the first role actually carries.
+
+        The previous fallback was ``.role:first-of-type``, which the stylesheet
+        contained and this test found, but the selector matched the backdrop
+        ``<g>`` that precedes the roles, never a role. The ticker stayed blank
+        on the published page while the test passed. So: find the first role
+        element in the document and check that a rule for one of *its* classes
+        sets it visible.
+        """
         for name in ("hero-dark", "hero-light"):
             svg = (ROOT / "assets" / f"{name}.svg").read_text("utf-8")
-            base = self._base_style(svg)
-            self.assertRegex(
-                base.replace(" ", ""),
-                r"\.role:first-of-type\{opacity:1\}",
-                f"{name}: no static fallback, so the ticker is blank wherever "
+            base = re.sub(r"\s", "", self._base_style(svg))
+            first = re.search(r'<g class="([^"]*\brole\b[^"]*)"', svg)
+            self.assertIsNotNone(first, f"{name}: no role group rendered")
+            classes = first.group(1).split()
+            visible = any(
+                re.search(rf"\.{cls}\{{[^}}]*opacity:1", base) for cls in classes
+            )
+            # Inside <img> the animation is applied but frozen at time zero,
+            # so whatever keyframes the static role runs must start visible.
+            for cls in classes:
+                rule = re.search(rf"\.{cls}\{{([^}}]*)\}}", base)
+                name = re.search(r"animation-name:([\w-]+)", rule.group(1)) if rule else None
+                if name:
+                    frames = re.search(rf"@keyframes{name.group(1)}\{{0%\{{([^}}]*)\}}", base)
+                    self.assertIsNotNone(frames, f"{name}: keyframes {name.group(1)} missing")
+                    self.assertIn("opacity:1", frames.group(1),
+                                  f"{name}: the static role's 0% keyframe hides it")
+            self.assertTrue(
+                visible,
+                f"{name}: the first role carries {classes} and no base rule for "
+                "any of them sets opacity:1, so the ticker is blank wherever "
                 "CSS animation does not run",
             )
 
     def test_every_animated_class_is_either_decorative_or_has_a_fallback(self):
-        """Flag any *new* class that is invisible until an animation runs."""
+        """Flag any *new* class that is invisible until an animation runs.
+
+        The convention is ``.<class>-static{opacity:1}`` applied to one element
+        of the class, so a reader without animation sees that one.
+        """
         for path in sorted((ROOT / "assets").glob("*.svg")):
             svg = path.read_text("utf-8")
             base = self._base_style(svg).replace(" ", "")
             for sel, body in re.findall(r"(\.[\w-]+)\{([^}]*)\}", base):
                 if "opacity:0" in body and "animation:" in body:
-                    fallback = f"{sel}:first-of-type{{opacity:1}}" in base
+                    static = f"{sel[1:]}-static"
+                    fallback = (
+                        re.search(rf"\.{static}\{{[^}}]*opacity:1", base) is not None
+                        and re.search(rf'class="[^"]*\b{static}\b', svg) is not None
+                    )
                     self.assertTrue(
                         fallback,
                         f"{path.name}: {sel} is invisible without animation and "
-                        "has no static fallback",
+                        f"no element carries a .{static} fallback",
                     )
 
 

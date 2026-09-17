@@ -82,6 +82,39 @@ class ConfigValidation(unittest.TestCase):
         with self.assertRaises(ConfigError):
             load(self._write(data))
 
+    def test_paused_status_is_accepted(self):
+        data = json.loads(json.dumps(self.base))
+        data["projects"][0]["status"] = "paused"
+        self.assertEqual(load(self._write(data)).projects[0].status, "paused")
+
+    def test_optional_sections_default_to_empty(self):
+        data = json.loads(json.dumps(self.base))
+        for key in ("aside", "workflow", "learning"):
+            data.pop(key, None)
+        cfg = load(self._write(data))
+        self.assertEqual(cfg.aside, "")
+        self.assertEqual(cfg.workflow, ())
+        self.assertEqual(cfg.learning, ())
+
+    def test_workflow_entries_are_validated_like_practices(self):
+        data = json.loads(json.dumps(self.base))
+        data["workflow"] = [{"label": "x", "detail": "y", "onclick": "alert(1)"}]
+        with self.assertRaises(ConfigError):
+            load(self._write(data))
+        data["workflow"] = [{"label": "x", "detail": "y"}] * 13
+        with self.assertRaises(ConfigError):
+            load(self._write(data))
+
+    def test_learning_and_aside_are_length_capped(self):
+        data = json.loads(json.dumps(self.base))
+        data["learning"] = ["a" * 281]
+        with self.assertRaises(ConfigError):
+            load(self._write(data))
+        data = json.loads(json.dumps(self.base))
+        data["aside"] = "a" * 601
+        with self.assertRaises(ConfigError):
+            load(self._write(data))
+
     def test_malformed_json_is_rejected(self):
         path = self.tmp / "profile.json"
         path.write_text("{not json", encoding="utf-8")

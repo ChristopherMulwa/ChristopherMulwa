@@ -133,9 +133,9 @@ def main(argv: list[str] | None = None) -> int:
             headline=cfg.headline,
             roles=cfg.roles,
             location=cfg.location,
-            stars=snap.total_stars,
             repos=snap.own_repos or snap.public_repos,
-            followers=snap.followers,
+            contributions=snap.contributions_total,
+            private_share=telemetry.private_share(snap),
             built=built,
             live=snap.live,
             # The radar plots real repositories rather than invented points.

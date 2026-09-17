@@ -1,10 +1,17 @@
-"""Telemetry panel: headline counters, 52-week commit activity, language mix.
+"""Telemetry panel: headline counters, 52-week contribution chart, work by type.
 
 This replaces the third-party stat-card services most profiles embed. Those
 services are convenient, but each one is an uncontrolled external dependency
 that sees a request for every page view, can change what it renders without
 notice, and occasionally goes down and leaves a broken image on your profile.
 Rendering locally costs a few hundred lines and removes all three problems.
+
+The counters read from the contributions calendar, which covers private
+repositories as well as public ones. Five public repositories said "18 commits
+a year" about an account that logged several thousand; the public-only view
+was true and still misleading. When the calendar is unavailable the card falls
+back to the public series and its caption says so, so the chart never claims
+to show something it does not.
 """
 
 from __future__ import annotations
@@ -15,9 +22,8 @@ from ..design import (
     SANS,
     Palette,
     document,
-    group,
     line,
-    mono_width,
+    meter,
     panel,
     rect,
     text,
@@ -32,8 +38,69 @@ CHART_Y = 142
 CHART_H = 148
 H = CHART_Y + CHART_H + 30
 
+MAX_COUNT = 10**9
+MAX_WEEK = 20_000
+
 MONTHS = ("JAN", "FEB", "MAR", "APR", "MAY", "JUN",
           "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
+
+
+def _count(value: object) -> int:
+    return int(clamp(value, 0, MAX_COUNT))
+
+
+def private_share(snap) -> int:
+    """Percentage of the year's contributions that landed in private repositories.
+
+    ``restrictedContributionsCount`` is only reported when the token belongs to
+    the profile owner or the owner has opted in on GitHub, so this is zero on
+    an anonymous build. It is capped at 100 even if the API disagrees with
+    itself, because a bar cannot be more than full.
+    """
+    total = _count(snap.contributions_total)
+    if not total:
+        return 0
+    private = min(_count(snap.contributions_private), total)
+    return int(round(private * 100 / total))
+
+
+def _split(snap) -> tuple[tuple[str, int], ...]:
+    """Where the year's contributions landed.
+
+    The per-type totals from the API (commits, pull requests, reviews, issues)
+    cover public repositories only; the private slice arrives as one opaque
+    count. Showing "19 commits" beside "3.5k contributions" would read as a
+    contradiction, so the panel splits the total by visibility instead and
+    labels the public rows as public.
+    """
+    total = _count(snap.contributions_total)
+    private = min(_count(snap.contributions_private), total)
+    return (
+        ("private repositories", private),
+        ("public commits", _count(snap.contributions_commits)),
+        ("public pull requests", _count(snap.contributions_prs)),
+        ("public reviews and issues",
+         _count(snap.contributions_reviews) + _count(snap.contributions_issues)),
+    )
+
+
+def telemetry_rows(snap, built: str) -> list[tuple[str, str]]:
+    """Label and value rows for the README's text fallback table.
+
+    Plain strings, not yet escaped: the README assembler owns the Markdown
+    sink and runs each cell through ``md_cell`` itself.
+    """
+    rows = [("Contributions, trailing 12 months", human_count(snap.contributions_total))]
+    for name, count in _split(snap):
+        label = name[0].upper() + name[1:]
+        if name == "private repositories":
+            label = "In private repositories"
+        rows.append((label, human_count(count)))
+    return rows + [
+        ("Public repositories (non-fork)", human_count(snap.own_repos or snap.public_repos)),
+        ("Years on GitHub", f"{clamp(snap.account_age_years, 0, 100):g}"),
+        ("Snapshot", f"{built} ({'live' if snap.live else 'cached'})"),
+    ]
 
 
 def _month_ticks(now_epoch: float) -> list[tuple[int, str]]:
@@ -66,8 +133,8 @@ def _tile(x: float, y: float, w: float, p: Palette, *, value: str, label: str,
 
 
 def _activity(x: float, y: float, w: float, h: float, p: Palette,
-              weeks: list[int], now_epoch: float) -> str:
-    series = [int(clamp(v, 0, 5000)) for v in (weeks or [])][-52:]
+              weeks: list[int], now_epoch: float, *, label: str, subtitle: str) -> str:
+    series = [int(clamp(v, 0, MAX_WEEK)) for v in (weeks or [])][-52:]
     if len(series) < 52:
         series = [0] * (52 - len(series)) + series
     peak = max(series) or 1
@@ -80,9 +147,8 @@ def _activity(x: float, y: float, w: float, h: float, p: Palette,
     bar_w = max(3.0, pitch - 3)
 
     out = [
-        panel(x, y, w, h, p, label="commit activity · 52w", accent=p.accent),
-        text("weekly commits across public repositories", inner_x, y + 30,
-             size=9.5, fill=p.faint),
+        panel(x, y, w, h, p, label=label, accent=p.accent),
+        text(subtitle, inner_x, y + 30, size=9.5, fill=p.faint),
         text(f"peak {peak}", x + w - 14, y + 30, size=9.5, fill=p.muted, anchor="end"),
     ]
 
@@ -108,7 +174,7 @@ def _activity(x: float, y: float, w: float, h: float, p: Palette,
     # Month ticks, anchored to the build date. Labels are dropped rather than
     # overlapped when the pitch is too tight to fit them.
     last_label_x = -999.0
-    for index, label in _month_ticks(now_epoch):
+    for index, label_text in _month_ticks(now_epoch):
         lx = inner_x + index * pitch + bar_w / 2
         if lx - last_label_x < 44:
             continue
@@ -116,63 +182,46 @@ def _activity(x: float, y: float, w: float, h: float, p: Palette,
             break
         out.append(line(lx - bar_w / 2 - 1.5, base_y, lx - bar_w / 2 - 1.5,
                         base_y + 4, stroke=p.border))
-        out.append(text(label, lx - bar_w / 2 - 1.5, base_y + 16, size=8.5,
+        out.append(text(label_text, lx - bar_w / 2 - 1.5, base_y + 16, size=8.5,
                         fill=p.faint, anchor="middle", letter_spacing=0.6))
         last_label_x = lx
     return "".join(out)
 
 
-def _languages(x: float, y: float, w: float, h: float, p: Palette,
-               languages: list[dict]) -> str:
-    ramp = (p.accent, p.cyan, p.violet, p.amber, p.rose, p.muted, p.faint)
-    entries = []
-    for i, item in enumerate(languages[:5]):
-        name = str(item.get("name", ""))[:24]
-        share = clamp(item.get("share"), 0.0, 1.0)
-        if name and share > 0.004:
-            entries.append((name, share, ramp[i % len(ramp)]))
+def _split_panel(x: float, y: float, w: float, h: float, p: Palette,
+                 entries: tuple[tuple[str, int], ...]) -> str:
+    ramp = (p.violet, p.accent, p.cyan, p.amber)
+    out = [panel(x, y, w, h, p, label="where it lives", accent=p.violet)]
 
-    out = [panel(x, y, w, h, p, label="language mix", accent=p.cyan)]
-
-    if not entries:
+    total = sum(count for _, count in entries)
+    if not total:
         out.append(text("no data", x + 14, y + h / 2, size=11, fill=p.faint))
         return "".join(out)
 
-    total = sum(e[1] for e in entries) or 1.0
-    bar_x, bar_y, bar_w, bar_h = x + 14, y + 34, w - 28, 10
-
-    # Stacked bar, clipped to a pill so the ends stay rounded.
-    clip_id = f"lang-clip-{p.name}"
-    out.append(
-        f'<clipPath id="{clip_id}"><rect x="{bar_x:g}" y="{bar_y:g}" '
-        f'width="{bar_w:g}" height="{bar_h:g}" rx="{bar_h / 2:g}"/></clipPath>'
-    )
-    seg = []
-    cursor = bar_x
-    for _, share, color in entries:
-        seg_w = bar_w * (share / total)
-        seg.append(rect(cursor, bar_y, seg_w + 0.5, bar_h, fill=color))
-        cursor += seg_w
-    out.append(f'<g clip-path="url(#{clip_id})">{"".join(seg)}</g>')
-
-    # Legend
-    ly = bar_y + 32
-    for name, share, color in entries:
-        pct = f"{share / total * 100:.0f}%"
-        out.append(f'<rect x="{bar_x:g}" y="{ly - 7:g}" width="8" height="8" rx="2" fill="{color}"/>')
-        out.append(text(name, bar_x + 15, ly, size=10.5, fill=p.text))
-        out.append(text(pct, x + w - 14, ly, size=10.5, fill=p.muted, anchor="end"))
-        ly += 16.5
+    inner_x, inner_w = x + 14, w - 28
+    row_y = y + 27
+    pitch = (h - 34) / len(entries)
+    for i, (name, count) in enumerate(entries):
+        color = ramp[i % len(ramp)]
+        out.append(text(name, inner_x, row_y, size=10.5, fill=p.text))
+        out.append(text(human_count(count), x + w - 14, row_y, size=10.5, fill=p.muted,
+                        anchor="end"))
+        out.append(meter(inner_x, row_y + 6, inner_w, p, fraction=count / total,
+                         color=color, height=4))
+        row_y += pitch
     return "".join(out)
 
 
 def render(p: Palette, *, snap, built: str, now_epoch: float) -> str:
+    total = _count(snap.contributions_total)
+    share = private_share(snap)
     tiles = (
-        (human_count(snap.own_repos or snap.public_repos), "repositories", "public, non-fork", p.accent),
-        (human_count(snap.total_stars), "stars earned", "across own repos", p.amber),
-        (human_count(snap.activity_total), "commits", "trailing 52 weeks", p.cyan),
-        (human_count(snap.followers), "followers", f"following {human_count(snap.following)}", p.violet),
-        (f"{snap.account_age_years:g}y", "on github", f"last push {snap.last_push or '—'}", p.rose),
+        (human_count(total), "contributions", "12 months, public and private", p.accent),
+        (f"{share}%", "in private repos", "of contributions" if total else "no calendar data",
+         p.violet),
+        (human_count(snap.own_repos or snap.public_repos), "public repos", "non-fork", p.cyan),
+        (f"{clamp(snap.account_age_years, 0, 100):g}y", "on github",
+         f"last public push {snap.last_push or 'unknown'}", p.rose),
     )
 
     tile_w = (W - PAD * 2 - TILE_GAP * (len(tiles) - 1)) / len(tiles)
@@ -190,26 +239,41 @@ def render(p: Palette, *, snap, built: str, now_epoch: float) -> str:
                   value=value, label=name, note=note, accent=accent)
         )
 
+    # The chart shows the calendar when there is one. Otherwise it shows the
+    # public commit series under the caption that series has always carried,
+    # so a reader can tell which of the two they are looking at.
+    if snap.contributions_weeks:
+        series = snap.contributions_weeks
+        chart_label = "contributions · 52w"
+        chart_subtitle = "weekly contributions, public and private repositories"
+        chart_desc = "contributions per week across public and private repositories"
+    else:
+        series = snap.activity
+        chart_label = "commit activity · 52w"
+        chart_subtitle = "weekly commits across public repositories"
+        chart_desc = "commits per week across public repositories only"
+
     left_w = 566
-    body.append(_activity(PAD, CHART_Y, left_w, CHART_H, p, snap.activity, now_epoch))
+    body.append(_activity(PAD, CHART_Y, left_w, CHART_H, p, series, now_epoch,
+                          label=chart_label, subtitle=chart_subtitle))
+    split = _split(snap)
     body.append(
-        _languages(PAD + left_w + 16, CHART_Y, W - PAD * 2 - left_w - 16, CHART_H, p,
-                   snap.languages)
+        _split_panel(PAD + left_w + 16, CHART_Y, W - PAD * 2 - left_w - 16, CHART_H, p,
+                     split)
     )
 
-    langs = ", ".join(
-        f"{item.get('name')} {clamp(item.get('share'), 0, 1) * 100:.0f}%"
-        for item in (snap.languages or [])[:5]
-    )
+    breakdown = ", ".join(f"{count} in {name}" if name == "private repositories"
+                          else f"{count} {name}" for name, count in split)
     return document(
         width=W,
         height=H,
         title="GitHub telemetry",
         desc=(
-            f"{snap.own_repos} public repositories, {snap.total_stars} stars, "
-            f"{snap.activity_total} commits in the last 52 weeks, "
-            f"{snap.followers} followers. Language mix: {langs or 'unavailable'}. "
-            f"Snapshot generated {built}."
+            f"{total} contributions in the last 12 months, {share}% in private "
+            f"repositories ({breakdown}). "
+            f"{_count(snap.own_repos or snap.public_repos)} public repositories, "
+            f"{clamp(snap.account_age_years, 0, 100):g} years on GitHub. "
+            f"The chart plots {chart_desc}. Snapshot generated {built}."
         ),
         body="".join(body),
     )

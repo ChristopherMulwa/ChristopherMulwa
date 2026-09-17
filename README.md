@@ -12,9 +12,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=c49649ac90">
-  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=57e69c3c3c">
-  <img alt="Christopher Mulwa — I build products, then try to break them." src="assets/hero-dark.svg?v=c49649ac90" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=368472cfa1">
+  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=82230dd277">
+  <img alt="Christopher Mulwa: I build systems that move money, then try to break them." src="assets/hero-dark.svg?v=368472cfa1" width="100%">
 </picture>
 
 &nbsp;
@@ -25,19 +25,17 @@
 
 ## whoami
 
-Software engineer in Nairobi working across the full stack, with a second discipline in application security. Most of what I ship lately is golf technology — a live challenge platform, a tee-time booking system, and a coaching tool — built as one product family on a shared stack. The security half is not a label: it is the reason my architecture decisions look the way they do, and it is the training I put deliberate hours into rather than the thing I claim on a CV.
+I came into software through security, not the other way round: a BSc in Information Security and Forensics from 2019 to 2023, then a self-taught stack on top. I founded Devsirch Hub in Nairobi, a security-first firm that also builds, and I am growing it into the cybersecurity company Kenya trusts first and the rest of the world comes to know. Right now most of my time goes into one client&#39;s financial platform, where I am the only engineer. Alongside it I shipped ChallengeMe, which golf clubs here use to run side-competitions: players pay by mobile money and winners get paid out. For the last two years I have built with AI coding agents inside rules I keep tightening, and practised security on my own code before anyone else gets to it. The part I like is the failure case: the retry that would pay twice, the audit row someone wants to quietly fix.
 
-- Full-stack product work — Next.js and NestJS front to back, PostgreSQL underneath, React Native for mobile.
-- Application security — threat modelling, authorisation design, and the boring input-handling work that stops most real bugs.
-- Offensive security in training — structured practice on TryHackMe and HackerOne, applied back into how I build.
-- Systems that survive contact with users — caching, background work, and failure modes considered before launch, not after.
 
-## Telemetry
+> Nearly all of my commits are client work in private repositories, so the public repositories here are a poor sample. The activity card counts the private ones too.
+
+## Activity
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/telemetry-dark.svg?v=8386da2e70">
-  <source media="(prefers-color-scheme: light)" srcset="assets/telemetry-light.svg?v=37c7eb596c">
-  <img alt="GitHub telemetry: repositories, stars, commit activity and language mix" src="assets/telemetry-dark.svg?v=8386da2e70" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/telemetry-dark.svg?v=28566a0025">
+  <source media="(prefers-color-scheme: light)" srcset="assets/telemetry-light.svg?v=f858c0e17b">
+  <img alt="GitHub telemetry: contributions across public and private repositories, weekly activity, and work by type" src="assets/telemetry-dark.svg?v=28566a0025" width="100%">
 </picture>
 
 <details>
@@ -45,80 +43,75 @@ Software engineer in Nairobi working across the full stack, with a second discip
 
 | Metric | Value |
 | --- | --- |
-| Public repositories (non-fork) | 5 |
-| Stars earned | 0 |
-| Commits, trailing 52 weeks | 18 |
-| Followers | 0 |
-| Years on GitHub | 2\.5 |
-| Last public push | 2026-07-26 |
-| Snapshot | 2026-07-26 15:10 UTC (live) |
-
-| Language | Share |
-| --- | --- |
-| TypeScript | 76% |
-| Python | 14% |
-| C | 10% |
+| Contributions, trailing 12 months | 3\.5k |
+| In private repositories | 3\.5k |
+| Public commits | 19 |
+| Public pull requests | 2 |
+| Public reviews and issues | 0 |
+| Public repositories (non-fork) | 4 |
+| Years on GitHub | 2\.7 |
+| Snapshot | 2026-09-17 11:13 UTC (live) |
 
 </details>
 
-## Build surface
+## Security practice
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg?v=2d95052ed4">
-  <source media="(prefers-color-scheme: light)" srcset="assets/stack-light.svg?v=2968125532">
-  <img alt="Technology stack grouped by domain" src="assets/stack-dark.svg?v=2d95052ed4" width="100%">
-</picture>
+Two rules I hold because I have seen the alternative. A hand-kept allowlist of protected tables goes stale within weeks, so the CI check that proves row-level security enumerates the catalogue and fails closed on any table it has not seen. And an empty-set SELECT FOR UPDATE locks nothing, so the first write of any hash chain takes an advisory lock through one helper, and a test forces the race on purpose.
+
+**Money moves through one door.** Only the payment gateway talks to a payment provider, and a database row chooses the adapter. Every financial mutation carries an idempotency key that the gateway claims in the database before it calls the provider, so a retried, double-tapped or replayed request maps to one transaction. The gateway never accepts a callback URL from a caller. A daily job compares the provider balance with the internal ledger, and any drift is an incident.
+
+**The audit log is tamper-evident, not tamper-proof.** Triggers reject UPDATE and DELETE, each row hashes the one before it, and a Merkle root over each period goes into a second protected table. Anyone with DDL rights, which today means me, could still rewrite the lot. That is the residual risk, and anchoring the roots outside the database is the next step.
+
+**Encrypted fields are bound to their place.** AES-256-GCM with a fresh IV per row and length-prefixed additional data naming the table, column and row, so a ciphertext cannot be moved into another column. Keys are versioned per field: rotation re-encrypts rows and the schema does not change. Services authenticate to each other with EdDSA-signed tokens that live for a minute, with verifier keys published on a JWKS endpoint and rotated with an overlap window.
+
+**Config fails closed.** A strict schema parses the environment at boot, with no defaults. Anything that has touched a commit or a chat transcript I treat as compromised and rotate. When an agent or a colleague needs to show that a secret is in place, I ask for its digest, never the value. The logger and the error reporter mask phone numbers, identity numbers and account numbers before anything leaves the process.
+
+**Self-review with tools, labelled as such.** Before a launch I run the OWASP API Security Top 10 and MASVS checklists against my own apps. Findings go into one register, and a finding closes only when the fix is merged and re-tested. That is not an independent test, and the register says so. I refuse to file a finding as both a blocker and deferred; one of those words is wrong.
+
+**This page practises it.** Every string from the GitHub API or profile.json passes one sanitiser before it reaches Markdown or SVG. The workflow uses no third-party Actions, the cards are drawn locally so no badge service sees your visit, and a pre-commit scan checks the output for secrets and active content. [Threat model](https://github.com/ChristopherMulwa/ChristopherMulwa/blob/main/docs/THREAT-MODEL.md)
+
+## How I work
+
+**I decide, the agent types.** I agree a spec with the agent before any code. Then it builds without checking back and writes anything the spec did not cover into the PR as an ASSUMPTION line. Merging, pushing and anything destructive wait for me, and a mobile change waits until I have run it on a physical handset.
+
+**Two review agents, two different questions.** One agent checks a diff against house conventions and the lessons file. Another checks it against the spec it came from. I read both verbatim and act first on the finding they disagree about. Before merge, that pass has caught a secret in cleartext and a validation error that echoed input back to the caller.
+
+**Every post-mortem ends as a check where it can.** Each incident gets a dated entry with the rule, the reason and how to apply it, citing the PR. I delete any lesson without a concrete reason. Where a grep can enforce one, it becomes a CI check. A few hundred lessons and about thirty checks so far.
 
 ## Shipping
 
+### A client&#39;s financial platform &nbsp;·&nbsp; `private`
+
+**Under NDA.**
+
+Backend services, an operations dashboard and mobile apps, built alone. The rest is the client&#39;s to describe.
+
+`NestJS` `Next.js` `React Native` `PostgreSQL` `Redis`
+
 ### ChallengeMe &nbsp;·&nbsp; `live`
 
-**Golf challenge platform, live in production.**
+**Side-competitions platform for golf clubs, live in Kenya.**
 
-Players create and settle head-to-head challenges: matchmaking, scoring, and a results history that has to stay correct when two people disagree about what happened on the course. Deployed and running for real users.
+Players pay entry fees by mobile money, club admins run events and payouts from a real-time dashboard, and every entry carries a snapshot of the fee rate that applied to it. Webhooks are idempotent and the backend re-verifies each one against the provider. The gateway checks a club&#39;s wallet before any disbursement. Tenant isolation lives at the application layer today, with a phased move to Postgres RLS written down. About 440 tests and an accessibility gate in CI.
 
-`Next.js` `NestJS` `PostgreSQL` `Redis` `Docker`
+`Next.js` `Express` `Prisma` `PostgreSQL` `Redis` `Socket.io` `Vercel`
 
 [challengeme.africa](https://challengeme.africa)
 
-### TeeupTime &nbsp;·&nbsp; `in build`
+## Stack
 
-**Tee-time booking for golf clubs.**
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg?v=22649102ac">
+  <source media="(prefers-color-scheme: light)" srcset="assets/stack-light.svg?v=adb03730ee">
+  <img alt="Technology stack grouped by domain" src="assets/stack-dark.svg?v=22649102ac" width="100%">
+</picture>
 
-Inventory, availability and reservations for clubs that currently run their bookings through a phone and a paper diary. The interesting problem is concurrency — two members booking the same slot at the same moment must resolve deterministically, and the club has to be able to override it.
+## Learning
 
-`Next.js` `NestJS` `PostgreSQL` `Redis`
-
-### Swing &nbsp;·&nbsp; `in build`
-
-**Coaching management for golf coaches and their students.**
-
-Lesson scheduling, student progress, and session notes in one place, with a mobile client for coaches who spend their working day on a range rather than at a desk. Multi-tenant from the first commit, because retrofitting tenant isolation is where authorisation bugs come from.
-
-`React Native` `Expo` `NestJS` `PostgreSQL`
-
-### WHS Handicap Calculator &nbsp;·&nbsp; `live`
-
-**World Handicap System calculator and simulator.**
-
-An implementation of the WHS handicap index rules — score differentials, the best-eight-of-twenty window, and the soft and hard caps — with a simulator for seeing how a round moves an index before it counts.
-
-`TypeScript`
-
-[github.com/ChristopherMulwa/WHS-Handicap-Calculator-simulator](https://github.com/ChristopherMulwa/WHS-Handicap-Calculator-simulator)
-
-## Security practice
-
-**Threat model before schema** — Every product above is multi-tenant. I decide who can see what, and how that is enforced at the query layer rather than the UI layer, before the first migration runs.
-
-**Authorisation is not authentication** — Most of the serious bugs I find in training are broken object-level authorisation, not broken login. I test for it on my own work the same way — by asking what happens when a valid session requests someone else&#39;s identifier.
-
-**Untrusted input has a boundary** — Input is validated and encoded where it enters and where it leaves, for the sink it is going to. This repository is a worked example: see generator/sanitize.py.
-
-**Secrets and permissions are scoped down** — Least privilege applied to CI tokens, database roles, and third-party keys. If a credential can only do one thing, a leak is an incident rather than a catastrophe.
-
-**Training that feeds back into building** — Structured offensive practice on TryHackMe and HackerOne. The point is not the badge count — it is that every class of bug I learn to exploit becomes a class of bug I stop shipping.
+- Offensive practice on TryHackMe and Hack The Box, with a Kali lab and a bug-bounty kit built around the OWASP testing guides. What I want from it is better instincts for my own code.
+- Mobile security for the React Native apps I ship: MASVS and MASTG, certificate pinning that behaves the same in a release build as in the dev client, and how a managed runtime changes it.
+- A daily cybersecurity news digest I built for myself. The model researches, a small Python engine dedups on URL, title and CVE id and files each story as a dated card. It has run every morning since May 2026.
 
 ---
 
-<sub>Generated 2026-07-26 15:10 UTC · live snapshot · no third-party trackers, badge services, or analytics on this page.</sub>
+<sub>Generated 2026-09-17 11:13 UTC · live snapshot · no third-party trackers, badge services, or analytics on this page.</sub>
