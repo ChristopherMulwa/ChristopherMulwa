@@ -257,11 +257,12 @@ def render(
             )
         )
 
-    # Standing tagline, under the rotating roles.
-    body.append(
-        text(headline, PAD, y + 152, size=14.5, fill=p.muted, family=SANS,
-             weight="400")
-    )
+    # Standing tagline, under the rotating roles. Optional.
+    if headline.strip():
+        body.append(
+            text(headline, PAD, y + 152, size=14.5, fill=p.muted, family=SANS,
+                 weight="400")
+        )
 
     # Footer facts
     facts = (
@@ -287,7 +288,7 @@ def render(
     return document(
         width=W,
         height=H,
-        title=f"{display_name}: {headline}",
+        title=f"{display_name}: {headline}" if headline.strip() else display_name,
         desc=(
             f"Banner for {display_name}. {', '.join(roles)}. Based in {location}. "
             f"{int(clamp(repos, 0, 10**9))} public repositories, {contributions} "

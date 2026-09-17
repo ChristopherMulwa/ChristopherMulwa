@@ -259,7 +259,7 @@ def load(path: Path) -> Config:
     return Config(
         username=username,
         display_name=_string(data, "displayName", "profile", limit=MAX_SHORT),
-        headline=_string(data, "headline", "profile", limit=MAX_SHORT),
+        headline=_string(data, "headline", "profile", limit=MAX_SHORT, required=False),
         roles=_string_list(data, "roles", "profile", limit=64, max_items=8),
         location=_string(data, "location", "profile", limit=MAX_SHORT),
         summary=_string(data, "summary", "profile", limit=1200),

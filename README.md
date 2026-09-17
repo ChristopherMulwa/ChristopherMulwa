@@ -12,9 +12,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=368472cfa1">
-  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=82230dd277">
-  <img alt="Christopher Mulwa: I build systems that move money, then try to break them." src="assets/hero-dark.svg?v=368472cfa1" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=ae9c765fdf">
+  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=ed6f91b830">
+  <img alt="Christopher Mulwa" src="assets/hero-dark.svg?v=ae9c765fdf" width="100%">
 </picture>
 
 &nbsp;
@@ -25,7 +25,7 @@
 
 ## whoami
 
-I came into software through security, not the other way round: a BSc in Information Security and Forensics from 2019 to 2023, then a self-taught stack on top. I founded Devsirch Hub in Nairobi, a security-first firm that also builds, and I am growing it into the cybersecurity company Kenya trusts first and the rest of the world comes to know. Right now most of my time goes into one client&#39;s financial platform, where I am the only engineer. Alongside it I shipped ChallengeMe, which golf clubs here use to run side-competitions: players pay by mobile money and winners get paid out. For the last two years I have built with AI coding agents inside rules I keep tightening, and practised security on my own code before anyone else gets to it. The part I like is the failure case: the retry that would pay twice, the audit row someone wants to quietly fix.
+Security engineer who builds. BSc Information Security and Forensics, 2019 to 2023, then a self-taught full-stack and mobile practice on top. Founder of Devsirch Hub in Nairobi, a security-first firm that also builds, on its way to being the cybersecurity company Kenya trusts first. I ship software that handles money, and I attack it before anyone else can.
 
 
 > Nearly all of my commits are client work in private repositories, so the public repositories here are a poor sample. The activity card counts the private ones too.
@@ -56,45 +56,37 @@ I came into software through security, not the other way round: a BSc in Informa
 
 ## Security practice
 
-Two rules I hold because I have seen the alternative. A hand-kept allowlist of protected tables goes stale within weeks, so the CI check that proves row-level security enumerates the catalogue and fails closed on any table it has not seen. And an empty-set SELECT FOR UPDATE locks nothing, so the first write of any hash chain takes an advisory lock through one helper, and a test forces the race on purpose.
+**Authentication is a boundary, not a form.** Argon2id for anything a person types, device binding for anything a person carries, a second factor before a privileged action, and short-lived signed tokens between services. A session that loses the network is not a session that has lost its rights.
 
-**Money moves through one door.** Only the payment gateway talks to a payment provider, and a database row chooses the adapter. Every financial mutation carries an idempotency key that the gateway claims in the database before it calls the provider, so a retried, double-tapped or replayed request maps to one transaction. The gateway never accepts a callback URL from a caller. A daily job compares the provider balance with the internal ledger, and any drift is an incident.
+**Authorisation on every object, every time.** Every ID a request carries is checked for ownership in the handler, then again by row-level security in the database. Broken object-level authorisation is the bug I hunt first, because it is the one that turns one user&#39;s data into everyone&#39;s.
 
-**The audit log is tamper-evident, not tamper-proof.** Triggers reject UPDATE and DELETE, each row hashes the one before it, and a Merkle root over each period goes into a second protected table. Anyone with DDL rights, which today means me, could still rewrite the lot. That is the residual risk, and anchoring the roots outside the database is the next step.
+**Least privilege, by named role.** Roles are named, permissions are enumerated, and a service can only do the one thing it exists for. A credential that can only do one thing turns a leak into an incident instead of a catastrophe.
 
-**Encrypted fields are bound to their place.** AES-256-GCM with a fresh IV per row and length-prefixed additional data naming the table, column and row, so a ciphertext cannot be moved into another column. Keys are versioned per field: rotation re-encrypts rows and the schema does not change. Services authenticate to each other with EdDSA-signed tokens that live for a minute, with verifier keys published on a JWKS endpoint and rotated with an overlap window.
+**Confidentiality, integrity, availability, in that order of paranoia.** Sensitive fields encrypted at rest and bound to their own row. Audit logs append-only and hash-chained, tamper-evident rather than tamper-proof. Money state machines enforced by the database, not the application. Rate limits that survive an outage of the store that holds them.
 
-**Config fails closed.** A strict schema parses the environment at boot, with no defaults. Anything that has touched a commit or a chat transcript I treat as compromised and rotate. When an agent or a colleague needs to show that a secret is in place, I ask for its digest, never the value. The logger and the error reporter mask phone numbers, identity numbers and account numbers before anything leaves the process.
+**Input is hostile until proven otherwise.** Strict schemas at every boundary, including the environment at boot, my own config, and this page: every string from the GitHub API or profile.json passes one sanitiser before it reaches Markdown or SVG. [Threat model](https://github.com/ChristopherMulwa/ChristopherMulwa/blob/main/docs/THREAT-MODEL.md)
 
-**Self-review with tools, labelled as such.** Before a launch I run the OWASP API Security Top 10 and MASVS checklists against my own apps. Findings go into one register, and a finding closes only when the fix is merged and re-tested. That is not an independent test, and the register says so. I refuse to file a finding as both a blocker and deferred; one of those words is wrong.
-
-**This page practises it.** Every string from the GitHub API or profile.json passes one sanitiser before it reaches Markdown or SVG. The workflow uses no third-party Actions, the cards are drawn locally so no badge service sees your visit, and a pre-commit scan checks the output for secrets and active content. [Threat model](https://github.com/ChristopherMulwa/ChristopherMulwa/blob/main/docs/THREAT-MODEL.md)
+**I test my own work first.** OWASP API Security Top 10 and MASVS before a launch, findings in one register that closes only on a merged and re-tested fix. That is self-review with tools, and I label it as such.
 
 ## How I work
 
-**I decide, the agent types.** I agree a spec with the agent before any code. Then it builds without checking back and writes anything the spec did not cover into the PR as an ASSUMPTION line. Merging, pushing and anything destructive wait for me, and a mobile change waits until I have run it on a physical handset.
+**Spec first.** I agree the design, then the agent builds. Anything the spec did not settle goes into the PR as an assumption, and merging waits for me.
 
-**Two review agents, two different questions.** One agent checks a diff against house conventions and the lessons file. Another checks it against the spec it came from. I read both verbatim and act first on the finding they disagree about. Before merge, that pass has caught a secret in cleartext and a validation error that echoed input back to the caller.
+**Nothing merges unreviewed.** Two review agents with different questions, then me. I act first on the finding they disagree about.
 
-**Every post-mortem ends as a check where it can.** Each incident gets a dated entry with the rule, the reason and how to apply it, citing the PR. I delete any lesson without a concrete reason. Where a grep can enforce one, it becomes a CI check. A few hundred lessons and about thirty checks so far.
+**Every incident becomes a check.** Post-mortems become dated lessons. Where a grep can enforce one, it becomes a CI gate.
+
+**Handsets, not simulators.** A mobile change ships after it has run on a physical device.
 
 ## Shipping
-
-### A client&#39;s financial platform &nbsp;·&nbsp; `private`
-
-**Under NDA.**
-
-Backend services, an operations dashboard and mobile apps, built alone. The rest is the client&#39;s to describe.
-
-`NestJS` `Next.js` `React Native` `PostgreSQL` `Redis`
 
 ### ChallengeMe &nbsp;·&nbsp; `live`
 
 **Side-competitions platform for golf clubs, live in Kenya.**
 
-Players pay entry fees by mobile money, club admins run events and payouts from a real-time dashboard, and every entry carries a snapshot of the fee rate that applied to it. Webhooks are idempotent and the backend re-verifies each one against the provider. The gateway checks a club&#39;s wallet before any disbursement. Tenant isolation lives at the application layer today, with a phased move to Postgres RLS written down. About 440 tests and an accessibility gate in CI.
+Players pay entry fees by mobile money, club admins run events and payouts from a real-time dashboard, and every entry keeps the fee rate that applied to it. Webhooks are idempotent and re-verified against the provider, and a club&#39;s wallet is checked before any disbursement. An accessibility gate runs in CI.
 
-`Next.js` `Express` `Prisma` `PostgreSQL` `Redis` `Socket.io` `Vercel`
+`Next.js` `Express` `Prisma` `PostgreSQL` `Redis` `Socket.io`
 
 [challengeme.africa](https://challengeme.africa)
 
@@ -108,9 +100,9 @@ Players pay entry fees by mobile money, club admins run events and payouts from 
 
 ## Learning
 
-- Offensive practice on TryHackMe and Hack The Box, with a Kali lab and a bug-bounty kit built around the OWASP testing guides. What I want from it is better instincts for my own code.
-- Mobile security for the React Native apps I ship: MASVS and MASTG, certificate pinning that behaves the same in a release build as in the dev client, and how a managed runtime changes it.
-- A daily cybersecurity news digest I built for myself. The model researches, a small Python engine dedups on URL, title and CVE id and files each story as a dated card. It has run every morning since May 2026.
+- Offensive practice on TryHackMe and Hack The Box, with a Kali lab and a bug-bounty kit built around the OWASP testing guides.
+- Mobile security for the React Native apps I ship: MASVS and MASTG, and certificate pinning that behaves the same in a release build as in the dev client.
+- A daily cybersecurity news digest I built for myself, running every morning since May 2026.
 
 ---
 

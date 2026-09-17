@@ -102,7 +102,8 @@ def build(cfg, snap, versions: dict[str, str], pill_slugs: list[tuple[str, objec
     out.append(
         _picture(
             "hero",
-            f"{md_text(cfg.display_name, 80)}: {md_text(cfg.headline, 80)}",
+            md_text(cfg.display_name, 80)
+            + (f": {md_text(cfg.headline, 80)}" if cfg.headline.strip() else ""),
             versions,
         )
     )
