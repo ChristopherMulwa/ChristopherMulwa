@@ -21,10 +21,6 @@
     {
       "label": "LinkedIn",
       "url": "https://www.linkedin.com/in/christophermulwa"
-    },
-    {
-      "label": "challengeme.africa",
-      "url": "https://challengeme.africa"
     }
   ],
   "practices": [
@@ -67,7 +63,7 @@
     {
       "name": "ChallengeMe",
       "tagline": "Side-competitions platform for golf clubs in Kenya.",
-      "detail": "Players pay entry fees by M-Pesa, club admins run events and payouts from a live dashboard. Payment webhooks are idempotent and confirmed against the provider before anything is credited, and a club's wallet is checked before any payout.",
+      "detail": "Built for a client. Mobile-money entry fees, event management and payouts for club admins. Live since 2025.",
       "stack": [
         "Next.js",
         "Express",
