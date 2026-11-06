@@ -56,19 +56,13 @@ I build and run software that moves money, and I do the security work on it myse
 
 ## Security practice
 
-**Money paths.** Integer amounts only. Every balance change runs in a database transaction with the row locked. Transaction state machines are enforced by Postgres triggers, so an application bug cannot move a payment backwards. Every payment mutation carries an idempotency key that is claimed before the provider call, not after.
+**Threat model before code.** For anything that handles money or personal data, I write down who could attack it and how before the design is settled, and the design answers each one.
 
-**Bank and provider integrations.** The service that talks to a bank is the only service that talks to a bank. Webhooks are logged raw before they are parsed, deduplicated under a lock, and never trusted on their own: the provider&#39;s status API confirms them. Callback URLs are set by the server, never accepted from a caller.
+**Standards, not instinct.** OWASP ASVS and the API Security Top 10 for web and services, MASVS and MASTG for mobile, the Kenya Data Protection Act for anything personal. Reviews are run against the list, and findings stay open until the fix is merged and retested.
 
-**Data at rest.** National IDs, bank account numbers and provider credentials are AES-256-GCM encrypted per row, with the row&#39;s identity bound into the authenticated data so a ciphertext cannot be moved between rows. Audit logs are append-only and hash-chained. Personal data is redacted at the logger, not by whoever remembers to.
+**Self-review is labelled as such.** I test my own work and say so. An independent penetration test is a different thing, and I tell clients to commission one.
 
-**Access.** Ownership is checked in the handler and again by row-level security. Services authenticate to each other with short-lived Ed25519 tokens. Admin actions need a second factor; the sensitive ones need it again. Secrets are read from a secret manager and the service refuses to boot if one is missing.
-
-**Mobile.** Tokens in the platform keystore, never in app storage. Public-key pinning. Device attestation checked on the server before any payout. Screens that show a PIN or confirm a payment block screenshots.
-
-**Operations.** Metrics, traces and logs through one collector. Every alert has a severity, a destination and a runbook. A webhook that fails signature verification is treated as an attack, and a ledger that disagrees with the bank is an incident.
-
-**Testing my own work.** OWASP API Security Top 10 and MASVS reviews before launch, with findings tracked until the fix is merged and retested. I say plainly that this is self-review, and that an independent test is a different thing.
+**Operations are part of security.** Every alert has a severity, an owner and a runbook, logs carry no personal data, and backups are restored on a schedule to prove they work.
 
 ## How I work
 
@@ -92,13 +86,13 @@ Players pay entry fees by M-Pesa, club admins run events and payouts from a live
 
 [challengeme.africa](https://challengeme.africa)
 
-### RSA Boda &nbsp;·&nbsp; `in build`
+### RSA Boda &nbsp;·&nbsp; `private`
 
-**Savings group platform for boda-boda riders in Kenya, built for BladeDoc Network.**
+**Savings and lending platform for riders&#39; groups in Kenya.**
 
-Three mobile apps, an admin dashboard, a backend and a separate payments service with direct bank integration for collections, payouts and reconciliation. Members save, borrow and fund group projects; officials approve payouts under dual control. Entering Google Play review, November 2026.
+Built and operated for a client. Mobile apps, admin dashboard, backend and bank-connected payments. Closed source.
 
-`NestJS` `Next.js` `React Native` `Expo` `PostgreSQL` `Redis`
+`NestJS` `Next.js` `React Native` `PostgreSQL`
 
 ## Stack
 
