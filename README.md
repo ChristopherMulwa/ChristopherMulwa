@@ -12,9 +12,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=ae9c765fdf">
-  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=ed6f91b830">
-  <img alt="Christopher Mulwa" src="assets/hero-dark.svg?v=ae9c765fdf" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.svg?v=80e1735887">
+  <source media="(prefers-color-scheme: light)" srcset="assets/hero-light.svg?v=585890295a">
+  <img alt="Christopher Mulwa" src="assets/hero-dark.svg?v=80e1735887" width="100%">
 </picture>
 
 &nbsp;
@@ -25,10 +25,10 @@
 
 ## whoami
 
-Security engineer who builds. BSc Information Security and Forensics, 2019 to 2023, then a self-taught full-stack and mobile practice on top. Founder of Devsirch Hub in Nairobi, a security-first firm that also builds, on its way to being the cybersecurity company Kenya trusts first. I ship software that handles money, and I attack it before anyone else can.
+I build and run software that moves money, and I do the security work on it myself: threat models, hardening, testing, incident response. Trained in information security first (BSc, 2019 to 2023), learned full-stack and mobile development by shipping. Founder of Devsirch Hub in Nairobi, where the same person who writes the code is accountable for keeping it safe in production.
 
 
-> Nearly all of my commits are client work in private repositories, so the public repositories here are a poor sample. The activity card counts the private ones too.
+> Almost all of my work is in private client repositories, so the public repos here are not representative. The activity card includes the private ones.
 
 ## Activity
 
@@ -56,55 +56,63 @@ Security engineer who builds. BSc Information Security and Forensics, 2019 to 20
 
 ## Security practice
 
-**Authentication is a boundary, not a form.** Argon2id for anything a person types, device binding for anything a person carries, a second factor before a privileged action, and short-lived signed tokens between services. A session that loses the network is not a session that has lost its rights.
+**Money paths.** Integer amounts only. Every balance change runs in a database transaction with the row locked. Transaction state machines are enforced by Postgres triggers, so an application bug cannot move a payment backwards. Every payment mutation carries an idempotency key that is claimed before the provider call, not after.
 
-**Authorisation on every object, every time.** Every ID a request carries is checked for ownership in the handler, then again by row-level security in the database. Broken object-level authorisation is the bug I hunt first, because it is the one that turns one user&#39;s data into everyone&#39;s.
+**Bank and provider integrations.** The service that talks to a bank is the only service that talks to a bank. Webhooks are logged raw before they are parsed, deduplicated under a lock, and never trusted on their own: the provider&#39;s status API confirms them. Callback URLs are set by the server, never accepted from a caller.
 
-**Least privilege, by named role.** Roles are named, permissions are enumerated, and a service can only do the one thing it exists for. A credential that can only do one thing turns a leak into an incident instead of a catastrophe.
+**Data at rest.** National IDs, bank account numbers and provider credentials are AES-256-GCM encrypted per row, with the row&#39;s identity bound into the authenticated data so a ciphertext cannot be moved between rows. Audit logs are append-only and hash-chained. Personal data is redacted at the logger, not by whoever remembers to.
 
-**Confidentiality, integrity, availability, in that order of paranoia.** Sensitive fields encrypted at rest and bound to their own row. Audit logs append-only and hash-chained, tamper-evident rather than tamper-proof. Money state machines enforced by the database, not the application. Rate limits that survive an outage of the store that holds them.
+**Access.** Ownership is checked in the handler and again by row-level security. Services authenticate to each other with short-lived Ed25519 tokens. Admin actions need a second factor; the sensitive ones need it again. Secrets are read from a secret manager and the service refuses to boot if one is missing.
 
-**Input is hostile until proven otherwise.** Strict schemas at every boundary, including the environment at boot, my own config, and this page: every string from the GitHub API or profile.json passes one sanitiser before it reaches Markdown or SVG. [Threat model](https://github.com/ChristopherMulwa/ChristopherMulwa/blob/main/docs/THREAT-MODEL.md)
+**Mobile.** Tokens in the platform keystore, never in app storage. Public-key pinning. Device attestation checked on the server before any payout. Screens that show a PIN or confirm a payment block screenshots.
 
-**If it is not observed, it is not running.** Metrics, traces and logs go through one collector to one place, and every alert maps to a severity with a fixed set of sinks. An event nobody mapped defaults to the middle severity, so a forgotten mapping shows up as noise rather than silence. A failed webhook signature pages as an attack, not a bug; a mismatch between a provider&#39;s balance and the ledger pages as an incident. Every alert has a runbook, and by the time a log line leaves the process it carries no personal data.
+**Operations.** Metrics, traces and logs through one collector. Every alert has a severity, a destination and a runbook. A webhook that fails signature verification is treated as an attack, and a ledger that disagrees with the bank is an incident.
 
-**I test my own work first.** OWASP API Security Top 10 and MASVS before a launch, findings in one register that closes only on a merged and re-tested fix. That is self-review with tools, and I label it as such.
+**Testing my own work.** OWASP API Security Top 10 and MASVS reviews before launch, with findings tracked until the fix is merged and retested. I say plainly that this is self-review, and that an independent test is a different thing.
 
 ## How I work
 
-**Spec first.** I agree the design, then the agent builds. Anything the spec did not settle goes into the PR as an assumption, and merging waits for me.
+**Design first.** The design is agreed in writing before code. Anything it did not settle is written into the PR as an assumption, so it can be argued with.
 
-**Nothing merges unreviewed.** Two review agents with different questions, then me. I act first on the finding they disagree about.
+**Review before merge.** Every change is reviewed before it merges, and the findings are listed in full before anything is filtered out.
 
-**Every incident becomes a check.** Post-mortems become dated lessons. Where a grep can enforce one, it becomes a CI gate.
+**Incidents become checks.** After an incident I write down the lesson with the date, and where a script can enforce it, it becomes a CI gate.
 
-**Handsets, not simulators.** A mobile change ships after it has run on a physical device.
+**Real devices.** A mobile change is tested on a physical phone before it ships, including a cheap one.
 
 ## Shipping
 
 ### ChallengeMe &nbsp;·&nbsp; `live`
 
-**Side-competitions platform for golf clubs, live in Kenya.**
+**Side-competitions platform for golf clubs in Kenya.**
 
-Players pay entry fees by mobile money, club admins run events and payouts from a real-time dashboard, and every entry keeps the fee rate that applied to it. Webhooks are idempotent and re-verified against the provider, and a club&#39;s wallet is checked before any disbursement. An accessibility gate runs in CI.
+Players pay entry fees by M-Pesa, club admins run events and payouts from a live dashboard. Payment webhooks are idempotent and confirmed against the provider before anything is credited, and a club&#39;s wallet is checked before any payout.
 
 `Next.js` `Express` `Prisma` `PostgreSQL` `Redis` `Socket.io`
 
 [challengeme.africa](https://challengeme.africa)
 
+### RSA Boda &nbsp;·&nbsp; `in build`
+
+**Savings group platform for boda-boda riders in Kenya, built for BladeDoc Network.**
+
+Three mobile apps, an admin dashboard, a backend and a separate payments service with direct bank integration for collections, payouts and reconciliation. Members save, borrow and fund group projects; officials approve payouts under dual control. Entering Google Play review, November 2026.
+
+`NestJS` `Next.js` `React Native` `Expo` `PostgreSQL` `Redis`
+
 ## Stack
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg?v=882abc71ae">
-  <source media="(prefers-color-scheme: light)" srcset="assets/stack-light.svg?v=20f499507d">
-  <img alt="Technology stack grouped by domain" src="assets/stack-dark.svg?v=882abc71ae" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg?v=7b31c1d05f">
+  <source media="(prefers-color-scheme: light)" srcset="assets/stack-light.svg?v=8229a0fa96">
+  <img alt="Technology stack grouped by domain" src="assets/stack-dark.svg?v=7b31c1d05f" width="100%">
 </picture>
 
 ## Learning
 
-- Offensive practice on TryHackMe and Hack The Box, with a Kali lab and a bug-bounty kit built around the OWASP testing guides.
-- Mobile security for the React Native apps I ship: MASVS and MASTG, and certificate pinning that behaves the same in a release build as in the dev client.
-- A daily cybersecurity news digest I built for myself, running every morning since May 2026.
+- Offensive work on TryHackMe and Hack The Box, Burp Suite against my own apps first.
+- Mobile security: MASVS and MASTG, applied to the React Native apps I ship.
+- A cybersecurity news digest I built for myself, running every morning since May 2026.
 
 ---
 
