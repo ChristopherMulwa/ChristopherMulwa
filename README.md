@@ -25,7 +25,7 @@
 
 ## whoami
 
-I build and run software that moves money, and I do the security work on it myself: threat models, hardening, testing, incident response. Trained in information security first (BSc, 2019 to 2023), learned full-stack and mobile development by shipping. Founder of Devsirch Hub in Nairobi, where the same person who writes the code is accountable for keeping it safe in production.
+I build and run software that moves money, and I do the security work on it myself: threat models, hardening, testing, incident response. Trained in information security first (BSc, 2019 to 2023), learned full-stack and mobile development by shipping. Founder of Devsirch Hub in Nairobi.
 
 
 > Almost all of my work is in private client repositories, so the public repos here are not representative. The activity card includes the private ones.
